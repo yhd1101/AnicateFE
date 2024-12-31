@@ -54,6 +54,7 @@ export const useLogin = () => {
     if (tokenLoadable.state === 'hasValue') {
       const { accessToken, userId } = tokenLoadable.contents;  // accessToken과 userId 추출
       setToken(accessToken);  // 토큰 저장
+      sessionStorage.setItem("id",userId);
       setIsLogin({ isLogin: true });
 
       console.log('로그인 성공, userId:', userId);  // userId를 콘솔에 찍기

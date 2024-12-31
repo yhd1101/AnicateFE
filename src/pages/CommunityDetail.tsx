@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useFetchCommunityDetail } from "@/services/useFetchCommunityDetail"; // 훅 임포트
 import { useUser } from "@/context/UserContext"; // UserContext 임포트
 import axios from "axios";
 import { useCreateComment } from "@/services/useCreateComment"; // 댓글 생성 훅 임포트
+import Community from "./Community";
 
 const CommunityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
-  const { userId } = useUser(); // 로그인한 사용자 정보 가져오기
   const [comment, setComment] = useState(""); // 댓글 입력 상태
-  const [animalSpecies, setAnimalSpecies] = useState(""); // 종 입력 상태
+  const [userId, setUserId] = useState<string | null>(null); // userId 상태
+
+  // 페이지 로드 시 userId 가져오기 (sessionStorage에서 불러오기)
+  useEffect(() => {
+    const storedUserId = sessionStorage.getItem("id");
+    if (storedUserId) {
+      setUserId(storedUserId); // sessionStorage에서 userId 불러와 상태 업데이트
+    }
+  }, []);
+
 
   // API로부터 데이터 불러오기
   const { data, isLoading, isError, error } = useFetchCommunityDetail(id!);
@@ -136,7 +145,7 @@ const CommunityDetail: React.FC = () => {
         )}
 
         {/* 수정 및 삭제 버튼 */}
-        {userId && (
+        {userId && community?.userId === Number(userId) &&  (
           <div className="flex justify-end space-x-4 mt-4">
             <button
               onClick={handleEditCommunity}
@@ -188,7 +197,7 @@ const CommunityDetail: React.FC = () => {
 
               <div className="ml-auto flex items-center space-x-2">
                 <span>{comment.createdAt.split("T")[0]}</span>
-                {userId && (
+                {userId && comment.userId === userId &&(
                   <>
                     <span
                       onClick={() => handleEditComment(comment.id)}
