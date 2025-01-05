@@ -1,19 +1,14 @@
-// src/components/Button.tsx
-
-import React from 'react';
+import React from "react";
 
 interface ButtonProps {
   text: string;
-  onClick: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void; // 이벤트 객체를 받을 수 있도록 타입 지정
   className?: string;
 }
 
-const Button: React.FC<ButtonProps> = ({ text, onClick, className = '' }) => {
+const Button: React.FC<ButtonProps> = ({ text, onClick, className }) => {
   return (
-    <button
-      onClick={onClick}
-      className={`bg-[#5CA157] text-white font-medium rounded-md p-2 hover:bg-[#4a8b42] transition ${className}`}
-    >
+    <button type="button" onClick={onClick} className={className}>
       {text}
     </button>
   );

@@ -13,6 +13,7 @@ const MenuSection: React.FC = () => {
           image="/magnifier.png"
           alt="Magnifier Icon"
           title="반려 동물정보 보기"
+          onClick={() => navigate('/information')} // 클릭 시 페이지 이동
         />
         <MenuButton
           image="/doctor.png"

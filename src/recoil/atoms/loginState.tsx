@@ -7,6 +7,18 @@ import { CONFIG } from '../../../config';
 import { LoginModalState, LoginState } from '@/types/type';
 // import { useRefreshToken } from '@/queries/useRefreshToken';
 
+export const petModalState = atom<LoginModalState>({
+  key: 'petModalState',  // 고유한 key를 설정
+  default: {
+    isModalOpen: false,  // 기본값은 모달이 닫힌 상태
+  },
+});
+
+export const scheduleModalState = atom<LoginModalState>({
+  key: 'scheduleModalState',
+  default: { isModalOpen: false }
+});
+
 export const loginState = atom<LoginState>({
   key: 'loginState',
   default: {

@@ -1,16 +1,59 @@
-// src/components/PetInfo.tsx
-
 import React from 'react';
 
-const PetInfo: React.FC<{ name: string; birthDate: string; breed: string }> = ({ name, birthDate, breed }) => {
+interface PetInfoProps {
+  name: string;
+  birthDate?: string;
+  species?: string;  // 종을 받도록 수정
+  breed?: string;    // 품종을 받도록 수정
+  gender?: string;   // 성별 추가
+  width?: string;    // 텍스트 영역의 너비
+  nameFontSize?: string; // 이름 글자 크기
+  infoFontSize?: string; // 정보(생년월일, 종류) 글자 크기
+}
+
+const PetInfo: React.FC<PetInfoProps> = ({ 
+  name, 
+  birthDate, 
+  species,    // 종 표시
+  breed,      // 품종 표시
+  gender, 
+  width = '60%', 
+  nameFontSize = '1xl', 
+  infoFontSize = 'xl' 
+}) => {
+  // 성별에 맞는 아이콘 선택
+  const genderIcon = gender === '암컷' ? '♀️' : gender === '수컷' ? '♂️' : '';
+
   return (
-    <div className="text-center w-[60%]">
+    <div className="text-center" style={{ width }}>
       <div className="flex justify-center items-center mb-4">
-        <span className="text-3xl font-semibold text-[#5CA157] mr-2">🐶</span>
-        <span className="text-2xl font-semibold">{name}</span>
+        {/* 성별 아이콘만 출력 */}
+        {genderIcon && (
+          <span className="text-3xl font-semibold text-[#5CA157] mr-2">{genderIcon}</span>
+        )}
+        <span className={`text-${nameFontSize} font-semibold`}>{name}</span>
       </div>
-      <div className="text-xl font-semibold text-[#5CA157] mb-4">{birthDate} (생년월일)</div>
-      <div className="text-xl font-semibold text-[#5CA157] mb-6">{breed} (종류)</div>
+
+      {/* 종 정보 출력 */}
+      {species && (
+        <div className={`text-${infoFontSize} font-semibold text-[#5CA157] mb-2`}>
+          {species}
+        </div>
+      )}
+
+      {/* 품종 정보 출력 */}
+      {breed && (
+        <div className={`text-${infoFontSize} font-semibold text-[#5CA157] mb-2`}>
+          {breed}
+        </div>
+      )}
+
+      {/* 생년월일 출력 */}
+      {birthDate && (
+        <div className={`text-${infoFontSize} font-semibold text-[#5CA157] mb-2`}>
+          {birthDate} 살
+        </div>
+      )}
     </div>
   );
 };

@@ -34,3 +34,16 @@ export interface PageDTO<T> {
   data: T[];
   meta: PageMeta;
 }
+
+
+export interface debounce {
+  (map: kakao.maps.Map, locate: location, setLocate: SetterOrUpdater<location>): void;
+}
+
+export type customoverlay = kakao.maps.CustomOverlay | null;
+
+export type MapScript = (lat: number, lng: number, draggable: boolean) => void;
+
+export type MiniMapScript = (lat: number, lng: number) => void;
+
+export type KakaoMapId = (longitude: number, latitude: number, placeName: string) => void;

@@ -24,7 +24,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-    }
+    },
+    // "kakao.maps.d.ts"
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

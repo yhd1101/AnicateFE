@@ -5,6 +5,7 @@ import { useUser } from "@/context/UserContext"; // UserContext 임포트
 import axios from "axios";
 import { useCreateComment } from "@/services/useCreateComment"; // 댓글 생성 훅 임포트
 import Community from "./Community";
+import Header from "@/components/Header";
 
 const CommunityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
@@ -103,6 +104,8 @@ const CommunityDetail: React.FC = () => {
   const comments = data?.data.comment.data; // 댓글 리스트
 
   return (
+    <>
+    <Header/>
     <div className="flex flex-col items-center">
       {/* 이미지가 텍스트 위에 오도록 변경 */}
       {community?.picture && (
@@ -222,6 +225,8 @@ const CommunityDetail: React.FC = () => {
         ))}
       </div>
     </div>
+    </>
+    
   );
 };
 

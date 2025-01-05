@@ -3,3 +3,7 @@
 @tailwindcss utilities;
 
 
+/* slick-carousel의 기본 스타일을 추가 */
+@import "~slick-carousel/slick/slick.css";
+@import "~slick-carousel/slick/slick-theme.css";
+
