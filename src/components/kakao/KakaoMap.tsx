@@ -3,6 +3,7 @@ import { useFetchSearchHospital } from "@/services/useFetchSearchHospital";
 import { useMapInfo } from "@/services/useMapInfo";
 import { getKakaoMapId } from "@/services/getKakaoMapId";
 import HospitalSearch from "../search/HospitalSearch";
+import { useSearch } from "@/context/SearchContext";
 
 
 
@@ -12,16 +13,28 @@ const KakaoMap: React.FC<{ setUserLocation: (location: { lat: number; lng: numbe
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [markers, setMarkers] = useState<any[]>([]); // 마커 관리
   const [activeInfowindow, setActiveInfowindow] = useState<any>(null); // 현재 열려 있는 말풍선
+  // const [gu, setGu] = useState("");
+  // const [dong, setDong] = useState("");
 
-  const [gu, setGu] = useState("");
-  const [dong, setDong] = useState("");
+  const { gu: contextGu, dong: contextDong } = useSearch(); // Context에서 gu, dong 가져오기
+  const [gu, setGu] = useState(contextGu); // Context 값을 초기값으로 로컬 상태 관리
+  const [dong, setDong] = useState(contextDong);
+
+  const { data: search } = useFetchSearchHospital(gu, dong); // 로컬 상태 기반 검색 데이터 가져오기
+  console.log("Context 검색값:", contextGu, contextDong);
+  console.log("로컬 상태 검색값:", gu, dong);
+  console.log("검색 결과:", search);
+
+  
+
+
 
   const { data: mapInfo } = useMapInfo(
     map?.getCenter()?.getLat() || 37.5665,
     map?.getCenter()?.getLng() || 126.9780
   );
 
-  const { data: search } = useFetchSearchHospital(gu, dong); // 구와 동 기반 검색 데이터 가져오기
+  // const { data: search } = useFetchSearchHospital(gu, dong); // 구와 동 기반 검색 데이터 가져오기
   console.log(search);
 
   // 지도 초기화

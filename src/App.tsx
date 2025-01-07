@@ -6,6 +6,7 @@ import { router } from './router';  // 라우터 설정
 import Footer from './components/Footer';
 import Header from './components/Header';
 import { UserProvider } from './context/UserContext';
+import { SearchProvider } from './context/SearchContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,11 +20,13 @@ const App = memo(() => (
   <RecoilRoot>
     <QueryClientProvider client={queryClient}>
       <UserProvider>
+        <SearchProvider>
         <div className="min-h-screen flex flex-col">
     
           <RouterProvider router={router} />
       
         </div>
+        </SearchProvider>
       </UserProvider>
       <Footer />
     </QueryClientProvider>

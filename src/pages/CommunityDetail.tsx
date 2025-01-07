@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useFetchCommunityDetail } from "@/services/useFetchCommunityDetail"; // 훅 임포트
 import { useUser } from "@/context/UserContext"; // UserContext 임포트
 import axios from "axios";
@@ -11,6 +11,7 @@ const CommunityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
   const [comment, setComment] = useState(""); // 댓글 입력 상태
   const [userId, setUserId] = useState<string | null>(null); // userId 상태
+  const navigate = useNavigate();
 
   // 페이지 로드 시 userId 가져오기 (sessionStorage에서 불러오기)
   useEffect(() => {
@@ -23,6 +24,8 @@ const CommunityDetail: React.FC = () => {
 
   // API로부터 데이터 불러오기
   const { data, isLoading, isError, error } = useFetchCommunityDetail(id!);
+
+  console.log(data);
 
   // 댓글 생성 API 호출 (useCreateComment 사용)
   const { mutate: createComment } = useCreateComment();
@@ -79,6 +82,7 @@ const CommunityDetail: React.FC = () => {
   // 수정 및 삭제 클릭 처리
   const handleEditCommunity = () => {
     console.log(`게시글 ${id} 수정`);
+    navigate(`/community/update/${id}`)
     // 수정 로직 작성
   };
 
@@ -101,7 +105,9 @@ const CommunityDetail: React.FC = () => {
   if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>; // 에러 발생시
 
   const community = data?.data.community;
-  const comments = data?.data.comment.data; // 댓글 리스트
+  const comments = data?.data.comment // 댓글 리스트
+  console.log("dsd", comments);
+
 
   return (
     <>
@@ -200,7 +206,7 @@ const CommunityDetail: React.FC = () => {
 
               <div className="ml-auto flex items-center space-x-2">
                 <span>{comment.createdAt.split("T")[0]}</span>
-                {userId && comment.userId === userId &&(
+                {userId && comment.userId === Number(userId) && ( // 조건 변경
                   <>
                     <span
                       onClick={() => handleEditComment(comment.id)}

@@ -26,14 +26,6 @@ interface CommunityResponse {
     community: PostData;
     comment: {
       data: any[];
-      meta: {
-        page: number;
-        size: number;
-        totalItems: number;
-        totalPages: number;
-        hasNext: boolean;
-        hasPrevious: boolean;
-      };
     };
   };
 }

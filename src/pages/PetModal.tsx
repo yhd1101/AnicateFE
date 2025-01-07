@@ -20,6 +20,7 @@ export const PetModal = () => {
     axios.get("http://localhost:8080/api/species")
       .then((response) => {
         console.log("Species Data:", response.data); // 데이터 확인
+        console.log("123334",response.data.data);
         setSpeciesList(response.data.data); // 종 데이터 상태 업데이트
       })
       .catch((error) => {
@@ -67,13 +68,26 @@ export const PetModal = () => {
   };
 
   // 품종 선택 변경
-  const handleSpeciesChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSpecies(event.target.value);
-    setSelectedBreed(''); // 품종을 초기화
-  };
+  // const handleSpeciesChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setSelectedSpecies(event.target.value);
+  //   setSelectedBreed(''); // 품종을 초기화
+  // };
 
+  // const handleBreedChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setSelectedBreed(event.target.value);
+  // };
+
+  const handleSpeciesChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    console.log("Selected Species ID:", value); // 선택한 값 출력
+    setSelectedSpecies(value);
+    setSelectedBreed(''); // 종이 바뀌면 품종 초기화
+  };
+  
   const handleBreedChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedBreed(event.target.value);
+    const value = event.target.value;
+    console.log("Selected Breed ID:", value); // 선택한 값 출력
+    setSelectedBreed(value);
   };
 
   const handleGenderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -95,6 +109,7 @@ export const PetModal = () => {
       return;
     }
     const tokenWithoutQuotes = token.replace(/^"|"$/g, ""); // 앞뒤 따옴표 제거
+  
   
     const formData = new FormData();
     const dto = {

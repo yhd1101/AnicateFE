@@ -18,7 +18,8 @@ const MenuSection: React.FC = () => {
         <MenuButton
           image="/doctor.png"
           alt="Doctor Icon"
-          title="관리자와채팅하기"
+          title="병원찾기"
+          onClick={() => navigate('/hospital')}
         />
          <MenuButton
           image="/community.png"

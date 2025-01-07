@@ -230,12 +230,12 @@ const handleAddSchedule = () => {
           return (
             <div
               key={dayIndex}
-              className={`w-24 h-24 border border-gray-300 flex justify-center items-center relative p-4 ${
+              className={`w-24 h-24 border border-gray-300 flex  items-center relative p-4 ${
                 isNextMonth ? "bg-blue-200 text-gray-500" : isPreviousMonth ? "bg-gray-200" : "bg-white"
               }`}
               onClick={() => isCurrentMonth && formattedDate && openScheduleList(formattedDate)}
             >
-             <div className="relative w-full h-full flex flex-col items-start justify-center">
+             <div className="relative w-full h-full flex flex-col items-start">
   <span className="text-sm font-semibold">{day}</span>
   {isCurrentMonth && formattedDate && schedules.has(formattedDate) ? (
     <ul className="text-xs mt-1 space-y-1">
@@ -268,7 +268,6 @@ const handleAddSchedule = () => {
 
   return (
     <div className="p-6">
-      <h3 className="text-2xl font-bold text-[#5CA157]">스케줄 관리</h3>
       <div className="mt-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">

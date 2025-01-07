@@ -11,7 +11,8 @@ import Header from '@/components/Header';
 import { usePetQuery } from '@/services/usePetQuery';
 import { useSingleScheduleQuery } from '@/services/useScheduleData';
 import PopularInformation from '../components/PopularInformation';
-import CommentCommunity from '@/components/commentCommunity';
+import CommentCommunity from '@/components/CommentCommunity';
+
 
 const HomePage: React.FC = () => {
   const { isLogin } = useRecoilValue(loginState);

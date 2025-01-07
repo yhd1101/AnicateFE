@@ -14,6 +14,14 @@ interface ItemListProps {
   onItemClick?: (id: number) => void; // 클릭 이벤트 핸들러
 }
 
+const MAX_CONTENT_LENGTH = 100; // 최대 표시할 글자 수
+
+const truncateContent = (content: string, maxLength: number) => {
+  return content.length > maxLength
+    ? content.slice(0, maxLength) + '...'
+    : content;
+};
+
 const ItemList: React.FC<ItemListProps> = ({ title, items, onItemClick }) => {
   return (
     <div className="w-full p-6 max-w-[1000px] ">
@@ -33,7 +41,7 @@ const ItemList: React.FC<ItemListProps> = ({ title, items, onItemClick }) => {
             <Card
               image={item.image}
               title={item.title}
-              content={item.content}
+              content={truncateContent(item.content, MAX_CONTENT_LENGTH)} // 잘라낸 content 전달
             />
           </div>
         ))}
