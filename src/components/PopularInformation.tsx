@@ -7,7 +7,7 @@ const PopularInformation: React.FC = () => {
   const { data: PopularInformations, isLoading, error } = useFetchInformation(1, "", "", "hit"); // sortBy=hit
   const navigate = useNavigate();
 
-  console.log("pop", PopularInformations?.data[0]);
+  console.log("pop", PopularInformations);
 
   if (isLoading) {
     return <div>로딩 중...</div>;

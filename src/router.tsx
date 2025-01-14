@@ -10,6 +10,8 @@ import Information from './pages/Information.tsx';
 import InformationDetail from './pages/InformationDetail.tsx';
 import Hospital from './pages/Hospital.tsx';
 import CommunityUpdate from './pages/CommunityUpdate.tsx';
+import ChatList from './pages/ChatList.tsx';
+import ChatRoom from './pages/ChatRoom.tsx';
 
 type routeElement = {
   path: string;
@@ -55,6 +57,14 @@ const routes: routeElement[] = [
   {
     path: '/hospital',
     element:<Hospital/>
+  },
+  {
+    path:'/chatlist',
+    element:<ChatList/>
+  },
+  {
+    path:'/chatroom',
+    element: <ChatRoom/>
   },
   {
     path: '/api/auth/kakao/callback',
