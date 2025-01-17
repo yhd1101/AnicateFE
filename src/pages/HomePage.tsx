@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
       <SearchSection onSearch={handleSearch}/>
       <MenuSection />
       {isLogin && (
-        <div className="flex justify-center gap-20 mb-6">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-6">
           {/* 반려동물 정보 렌더링 */}
           {petWithSmallestId ? (
             <ProfileSection
@@ -98,6 +98,7 @@ const HomePage: React.FC = () => {
           />
         </div>
       )}
+
 
       {/* 병원 및 커뮤니티 섹션 */}
       <div className="flex justify-center">

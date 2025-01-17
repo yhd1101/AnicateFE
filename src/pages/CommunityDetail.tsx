@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchCommunityDetail } from "@/services/useFetchCommunityDetail"; // 훅 임포트
-import { useUser } from "@/context/UserContext"; // UserContext 임포트
 import axios from "axios";
 import { useCreateComment } from "@/services/useCreateComment"; // 댓글 생성 훅 임포트
-import Community from "./Community";
+
 import Header from "@/components/Header";
+import LikeButton from "@/components/Button/LikeButton";
+import { useLikeMutation } from "@/services/useLikeMutation";
+import { useLikeDeleteMutation } from "@/services/useLikeDeleteMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CommunityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
   const [comment, setComment] = useState(""); // 댓글 입력 상태
+  const [liked, setLiked] = useState(false); // 좋아요 상태 추가
+  const [likeCount, setLikeCount] = useState(0); // 좋아요 수 상태
   const [userId, setUserId] = useState<string | null>(null); // userId 상태
+  const queryClient = useQueryClient();
+
+  const { mutate: likePost } = useLikeMutation();
+  const { mutate: likeDelete} = useLikeDeleteMutation();
   const navigate = useNavigate();
 
   // 페이지 로드 시 userId 가져오기 (sessionStorage에서 불러오기)
@@ -27,8 +36,6 @@ const CommunityDetail: React.FC = () => {
 
   console.log(data);
 
-  // 댓글 생성 API 호출 (useCreateComment 사용)
-  const { mutate: createComment } = useCreateComment();
 
   // 댓글 입력 처리
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -41,43 +48,125 @@ const CommunityDetail: React.FC = () => {
   };
 
   // 댓글 제출 처리
+  // const handleCommentSubmit = async () => {
+  //   if (!comment) {
+  //     alert("댓글을 입력해주세요.");
+  //     return;
+  //   }
+
+  //   // 세션에서 토큰 가져오기
+  //   const token = sessionStorage.getItem("token");
+
+  //   if (!token) {
+  //     alert("로그인이 필요합니다.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const sanitizedToken = token.replace(/"/g, ""); // 토큰에서 따옴표 제거
+
+  //     // 댓글 생성 API 호출 (id를 communityId로 사용)
+  //     const response = await axios.post(
+  //       `http://localhost:8080/api/comments/${id}`, // communityId를 URL에 넣음
+  //       { content: comment }, // 댓글 내용
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${sanitizedToken}`, // Authorization 헤더에 토큰 추가
+  //         },
+  //       }
+  //     );
+  //     alert("댓글이 등록되었습니다!");
+  //     const newComment = response.data;
+  //     queryClient.setQueryData(["communityDetail", id], (oldData: any) => {
+  //       if (oldData) {
+  //         return {
+  //           ...oldData,
+  //           data: {
+  //             ...oldData.data,
+  //             comment: [...oldData.data.comment, newComment], // 새로운 댓글 추가
+  //           },
+  //         };
+  //       }
+  //       return oldData;
+  //     });
+
+  //     // 댓글 등록 후 처리 (예: 댓글 리스트 갱신 등)
+  //     console.log("댓글 등록 성공:", response.data);
+  //     setComment(""); // 댓글 입력 초기화
+  //   } catch (error) {
+  //     console.error("댓글 등록 실패:", error);
+  //     alert("댓글 등록에 실패했습니다.");
+  //   }
+  // };
+
   const handleCommentSubmit = async () => {
-    if (!comment) {
+    if (!comment.trim()) {
       alert("댓글을 입력해주세요.");
       return;
     }
-
-    // 세션에서 토큰 가져오기
+  
     const token = sessionStorage.getItem("token");
-
     if (!token) {
       alert("로그인이 필요합니다.");
       return;
     }
-
+  
     try {
-      const sanitizedToken = token.replace(/"/g, ""); // 토큰에서 따옴표 제거
-
-      // 댓글 생성 API 호출 (id를 communityId로 사용)
+      const sanitizedToken = token.replace(/"/g, "");
+  
+      // 서버로 댓글 등록 요청
       const response = await axios.post(
-        `http://localhost:8080/api/comments/${id}`, // communityId를 URL에 넣음
-        { content: comment }, // 댓글 내용
+        `http://localhost:8080/api/comments/${id}`,
+        { content: comment },
         {
           headers: {
-            Authorization: `Bearer ${sanitizedToken}`, // Authorization 헤더에 토큰 추가
+            Authorization: `Bearer ${sanitizedToken}`,
           },
         }
       );
-      alert("댓글이 등록되었습니다!");
 
-      // 댓글 등록 후 처리 (예: 댓글 리스트 갱신 등)
-      console.log("댓글 등록 성공:", response.data);
-      setComment(""); // 댓글 입력 초기화
-    } catch (error) {
-      console.error("댓글 등록 실패:", error);
+      console.log("댓글 등록 성공 응답:", response.data.data);
+      const newComment = response.data.data; // 서버에서 반환된 댓글 데이터
+      alert("댓글이 등록되었습니다!");
+      setComment(""); // 입력 초기화
+  
+      // React Query 캐시 업데이트
+      queryClient.setQueryData(["communityDetail", id], (oldData: any) => {
+        if (!oldData) return oldData;
+      
+        const updatedComments = [
+          ...oldData.data.comment, // 기존 댓글
+          {
+            id: newComment.id,
+            communityId: newComment.communityId,
+            userId: newComment.userId,
+            name: newComment.name || "익명 사용자",
+            profileImg: newComment.profileImg || "",
+            content: newComment.content,
+            canEdit: newComment.canEdit || false,
+            createdAt: newComment.createdAt || new Date().toISOString(),
+            updatedAt: newComment.updatedAt || new Date().toISOString(),
+          },
+        ];
+      
+      
+        console.log("업데이트된 캐시 데이터:", updatedComments);
+      
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            comment: updatedComments,
+          },
+        };
+      });
+      
+    } catch (error: any) {
+      console.error("댓글 등록 실패:", error.response ? error.response.data : error.message);
       alert("댓글 등록에 실패했습니다.");
     }
   };
+  
 
   // 수정 및 삭제 클릭 처리
   const handleEditCommunity = () => {
@@ -101,13 +190,80 @@ const CommunityDetail: React.FC = () => {
     // 삭제 로직 작성
   };
 
-  if (isLoading) return <div>로딩 중...</div>; // 로딩 상태일 때
-  if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>; // 에러 발생시
+  // if (isLoading) return <div>로딩 중...</div>; // 로딩 상태일 때
+  // if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>; // 에러 발생시
 
   const community = data?.data.community;
   const comments = data?.data.comment // 댓글 리스트
   console.log("dsd", comments);
 
+  useEffect(() => {
+    if (data?.data?.community) {
+      const { liked: initialLiked, likeCount: initialLikeCount } = data.data.community;
+      setLiked(initialLiked); // 초기 liked 상태 설정
+      setLikeCount(initialLikeCount); // 초기 likeCount 설정
+    }
+  }, [data]);
+
+
+
+  const handleLike = () => {
+    if (!id) return;
+
+    if (liked) {
+      // 좋아요 취소 API 호출
+      likeDelete(id, {
+        onSuccess: () => {
+          setLiked(false); // 좋아요 상태를 false로 변경
+          setLikeCount((prev) => prev - 1); // 좋아요 수 감소
+
+          // React Query 캐시 업데이트
+          queryClient.setQueryData(["communityDetail", id], (oldData: any) => {
+            if (oldData) {
+              return {
+                ...oldData,
+                data: {
+                  ...oldData.data,
+                  community: {
+                    ...oldData.data.community,
+                    liked: false,
+                    likeCount: oldData.data.community.likeCount - 1,
+                  },
+                },
+              };
+            }
+            return oldData;
+          });
+        },
+      });
+    } else {
+      // 좋아요 API 호출
+      likePost(id, {
+        onSuccess: () => {
+          setLiked(true); // 좋아요 상태를 true로 변경
+          setLikeCount((prev) => prev + 1); // 좋아요 수 증가
+
+          // React Query 캐시 업데이트
+          queryClient.setQueryData(["communityDetail", id], (oldData: any) => {
+            if (oldData) {
+              return {
+                ...oldData,
+                data: {
+                  ...oldData.data,
+                  community: {
+                    ...oldData.data.community,
+                    liked: true,
+                    likeCount: oldData.data.community.likeCount + 1,
+                  },
+                },
+              };
+            }
+            return oldData;
+          });
+        },
+      });
+    }
+  };
 
   return (
     <>
@@ -133,7 +289,9 @@ const CommunityDetail: React.FC = () => {
             />
           )}
           {community?.name && <p className="text-sm text-gray-700">{community.name}</p>}
+
         </div>
+        
 
         <div className="border-t-2 border-gray-300 mt-2" />
         {community?.title && <h3 className="text-2xl font-bold mt-4">{community.title}</h3>}
@@ -153,23 +311,30 @@ const CommunityDetail: React.FC = () => {
           </div>
         )}
 
+
         {/* 수정 및 삭제 버튼 */}
-        {userId && community?.userId === Number(userId) &&  (
+
           <div className="flex justify-end space-x-4 mt-4">
-            <button
-              onClick={handleEditCommunity}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              수정
-            </button>
-            <button
-              onClick={handleDeleteCommunity}
-              className="text-red-500 hover:text-red-700"
-            >
-              삭제
-            </button>
+            <LikeButton onClick={handleLike} liked={liked} likeCount={community?.likeCount}/>
+            {userId && community?.userId === Number(userId) &&  (
+              <>
+                <button
+                  onClick={handleEditCommunity}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={handleDeleteCommunity}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  삭제
+                </button>
+              </>
+          
+                )}
           </div>
-        )}
+    
 
         {/* 댓글 입력창 */}
         <textarea
@@ -190,23 +355,24 @@ const CommunityDetail: React.FC = () => {
         </div>
 
         {/* 댓글 리스트 */}
-        {comments?.map((comment) => (
+      {comments?.length > 0 &&
+        comments.map((comment) => (
           <div key={comment.id} className="mt-6 w-full">
             <div className="flex items-center text-xs text-gray-500 mt-2">
               <div className="flex items-center space-x-2">
-                {comment.profileImg && (
+                {comment?.profileImg && (
                   <img
                     src={comment.profileImg}
                     alt="프로필 이미지"
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 )}
-                {comment.name && <p className="text-sm text-gray-700">{comment.name}</p>}
+                {comment?.name && <p className="text-sm text-gray-700">{comment.name}</p>}
               </div>
 
               <div className="ml-auto flex items-center space-x-2">
-                <span>{comment.createdAt.split("T")[0]}</span>
-                {userId && comment.userId === Number(userId) && ( // 조건 변경
+                <span>{comment?.createdAt?.split("T")[0]}</span>
+                {userId && comment.userId === Number(userId) && (
                   <>
                     <span
                       onClick={() => handleEditComment(comment.id)}
@@ -225,10 +391,11 @@ const CommunityDetail: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-sm text-gray-800 mt-2">{comment.content}</p>
+            <p className="text-sm text-gray-800 mt-2">{comment?.content}</p>
             <div className="border-t-2 border-gray-300 mt-4" />
           </div>
         ))}
+
       </div>
     </div>
     </>

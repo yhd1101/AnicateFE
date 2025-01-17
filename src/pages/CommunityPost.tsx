@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CommunityPost: React.FC = () => {
   const navigate = useNavigate();
   const [animalSpecies, setAnimalSpecies] = useState(""); // 단일 문자열
+  const queryClient = useQueryClient(); // React Query Client 인스턴스
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -71,6 +73,11 @@ const CommunityPost: React.FC = () => {
       });
       console.log("등록 성공:", response.data);
       alert("글이 성공적으로 등록되었습니다.");
+      queryClient.invalidateQueries(["community"] as any);
+
+
+
+
       navigate("/community");
     } catch (error: any) {
       console.error("등록 실패:", error.response ? error.response.data : error.message);

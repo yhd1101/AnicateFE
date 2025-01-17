@@ -1,13 +1,18 @@
 import React from 'react';
+import LikeButton from '../Button/LikeButton';
+import commentIcon from '@/assets/icons/comment.svg';
+
 
 interface CommunityPostProps {
   tag: string;
   title: string;
   content: string;
   imageUrl: string;
+  commentCount: number;
+  likeCount: number;
 }
 
-const CommunityPost: React.FC<CommunityPostProps> = ({ tag, title, content, imageUrl }) => {
+const CommunityPost: React.FC<CommunityPostProps> = ({ tag, title, content, imageUrl, commentCount, likeCount }) => {
   // Content 최대 길이
   const MAX_CONTENT_LENGTH = 50; // 원하는 길이 설정
 
@@ -18,9 +23,9 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ tag, title, content, imag
   return (
     <div className="w-full max-w-4xl bg-white shadow-md rounded-lg p-4 mb-6 flex">
       {/* 왼쪽: 텍스트 */}
-      <div className="flex flex-col justify-between flex-1 pr-4">
+      <div className="flex flex-col  flex-1 pr-4">
         {/* 태그 */}
-        <div className="bg-[#D8E6BE] text-black text-sm font-semibold px-3 py-1 rounded-md w-max">
+        <div className="bg-[#D8E6BE] text-black text-sm font-semibold px-2 py-1 rounded-md w-max">
           {tag}
         </div>
 
@@ -34,13 +39,33 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ tag, title, content, imag
       </div>
 
       {/* 오른쪽: 이미지 */}
-      <div className="w-24 h-24 flex-shrink-0">
-        <img
-          src={imageUrl}
-          alt="Community"
-          className="w-full h-full object-cover rounded-md"
-        />
+      <div className='flex-col'>
+        <div className="w-24 h-24 flex-shrink-0">
+          <img
+            src={imageUrl}
+            alt="Community"
+            className="w-full h-full object-cover rounded-md"
+          />
+        </div>
+        <div className='flex itemts-center gap-3'>
+          <LikeButton likeCount={likeCount}/>
+          <div
+            className={`flex items-center gap-2 cursor-pointer`}
+          >
+            <img
+              src={commentIcon} // 상태에 따라 이미지 변경
+              alt="comment"
+              className="w-4 h-4"
+            />
+            <span className="text-sm font-medium">
+              {commentCount}
+            </span>
+          </div>
+        
+        </div>
+ 
       </div>
+     
     </div>
   );
 };

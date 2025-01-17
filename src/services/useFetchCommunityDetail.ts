@@ -13,6 +13,7 @@ interface PostData {
   animalSpecies: string;
   commentCount: number;
   likeCount: number;
+  liked:boolean;
   canEdit: boolean;
   createdAt: string;
   updatedAt: string;
@@ -32,9 +33,21 @@ interface CommunityResponse {
 
 // API 호출 함수
 const fetchCommunityDetail = async (id: string): Promise<CommunityResponse> => {
-  const response = await axios.get(`http://localhost:8080/api/community/${id}`);
+  const token = sessionStorage.getItem("token"); // 세션에서 토큰 가져오기
+
+  // 조건부로 헤더 생성
+  const headers: Record<string, string> = token
+    ? { Authorization: `Bearer ${token.replace(/"/g, "")}` } // 토큰이 있을 때만 추가
+    : {};
+
+  const response = await axios.get(`http://localhost:8080/api/community/${id}`, {
+    headers, // 조건부 헤더 추가
+  });
+
   return response.data;
 };
+
+
 
 // useQuery 훅을 통해 API 데이터 가져오기
 export const useFetchCommunityDetail = (id: string) => {

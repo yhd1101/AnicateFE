@@ -67,6 +67,8 @@ const Community: React.FC = () => {
                   title={post.title}
                   content={post.content}
                   imageUrl={post.picture}
+                  commentCount={post.commentCount}
+                  likeCount={post.likeCount}
                 />
               </div>
             ))

@@ -10,6 +10,7 @@ interface PostData {
   picture: string;
   animalSpecies: string;
   commentCount: number;  
+  likeCount: number
 }
 
 interface MetaData {

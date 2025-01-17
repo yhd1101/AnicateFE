@@ -28,7 +28,7 @@ const App = memo(() => (
         </div>
         </SearchProvider>
       </UserProvider>
-      <Footer />
+      {/* <Footer /> */}
     </QueryClientProvider>
   </RecoilRoot>
 ));
