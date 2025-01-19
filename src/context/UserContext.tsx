@@ -1,19 +1,24 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
+
+// Role enum 타입 정의
+export type Role = "USER" | "ADMIN";
 
 interface UserContextType {
-  userId: number | null; // userId는 숫자 또는 null이어야 합니다.
-  setUserInfo: React.Dispatch<React.SetStateAction<{ userId: number | null }>>; // setUserInfo는 userId만 받아야 합니다.
+  userId: number | null; // userId는 숫자 또는 null
+  role: Role | null; // role은 "USER" 또는 "ADMIN" 또는 null
+  setUserInfo: React.Dispatch<React.SetStateAction<{ userId: number | null; role: Role | null }>>; // userId와 role 설정
 }
 
 const defaultUserContext: UserContextType = {
   userId: null,
+  role: null,
   setUserInfo: () => {},
 };
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [userInfo, setUserInfo] = useState<{ userId: number | null }>(defaultUserContext);
+  const [userInfo, setUserInfo] = useState<{ userId: number | null; role: Role | null }>(defaultUserContext);
 
   return (
     <UserContext.Provider value={{ ...userInfo, setUserInfo }}>

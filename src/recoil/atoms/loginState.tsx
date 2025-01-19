@@ -243,7 +243,7 @@ export const loginAtom = selector({
       }
 
       // 여기서 userId를 반환
-      return { accessToken: data.data.accessToken, userId: data.data.userId };
+      return { accessToken: data.data.accessToken, userId: data.data.userId, role: data.data.role };
     } catch (error) {
       console.error('로그인 실패:', error);
       throw error; // 에러를 호출한 쪽으로 전달

@@ -62,10 +62,11 @@ const routes: routeElement[] = [
     path:'/chatlist',
     element:<ChatList/>
   },
+
   {
-    path:'/chatroom',
-    element: <ChatRoom/>
-  },
+    path: '/chatroom/:roomId',
+    element: <ChatRoom />
+  },  
   {
     path: '/api/auth/kakao/callback',
     element: <KakaoRedirection />,

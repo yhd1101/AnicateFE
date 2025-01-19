@@ -28,5 +28,6 @@
     // "kakao.maps.d.ts"
   },
   "include": ["src"],
+  "exclude": ["src/setupProxy.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

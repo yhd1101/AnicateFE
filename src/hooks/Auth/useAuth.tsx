@@ -52,16 +52,17 @@ export const useLogin = () => {
 
   useEffect(() => {
     if (tokenLoadable.state === 'hasValue') {
-      const { accessToken, userId } = tokenLoadable.contents;  // accessToken과 userId 추출
+      const { accessToken, userId,role } = tokenLoadable.contents;  // accessToken과 userId 추출
       setToken(accessToken);  // 토큰 저장
       sessionStorage.setItem("id",userId);
+      sessionStorage.setItem("role", role); // role 저장
       setIsLogin({ isLogin: true });
 
-      console.log('로그인 성공, userId:', userId);  // userId를 콘솔에 찍기
+      console.log('로그인 성공, userId:', userId, "role" , role);  // userId를 콘솔에 찍기
 
       if (userId !== undefined) {
-        setUserInfo({ userId });  // UserContext에 userId만 저장
-        console.log('userId가 UserContext에 저장되었습니다:', userId);
+        setUserInfo({ userId, role });  // UserContext에 userId만 저장
+        console.log('userId가 UserContext에 저장되었습니다:', userId, role);
       }
 
       navigate('/');
