@@ -22,6 +22,10 @@ export const BigCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useRecoilState(scheduleModalState); // ScheduleModal 상태 관리
 
+  const [schedulesForCalendar, setSchedulesForCalendar] = useState<Map<string, string[]>>(new Map());
+  const [schedulesForModal, setSchedulesForModal] = useState<Map<string, string[]>>(new Map());
+
+
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
 const [selectedPetName, setSelectedPetName] = useState<string | null>(null);
 
@@ -114,43 +118,59 @@ const handleAddSchedule = () => {
   
 
 
-  useEffect(() => {
-    if (data) {
-      const loadedSchedules = new Map();
-  
-      data.forEach((item) => {
-        // startDatetime에서 로컬 날짜 추출
-        const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).replace(/\./g, "").trim().replace(/\s/g, "-"); // YYYY-MM-DD 형식으로 변환
-        
-        const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }); // 시작 시간 (HH:mm)
-        
-        const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }); // 종료 시간 (HH:mm)
-        
-        const scheduleText = `${startTime}~${endTime} ${item.name}`;
-  
-        if (loadedSchedules.has(date)) {
-          loadedSchedules.get(date).push(scheduleText);
-        } else {
-          loadedSchedules.set(date, [scheduleText]);
-        }
+useEffect(() => {
+  if (data) {
+    const loadedSchedulesForModal = new Map();
+    const loadedSchedulesForCalendar = new Map();
+
+    data.forEach((item) => {
+      // 날짜 추출
+      const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).replace(/\./g, "").trim().replace(/\s/g, "-"); // YYYY-MM-DD 형식
+
+      // 시간 추출
+      const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       });
-  
-      setSchedules(loadedSchedules);
-    }
-  }, [data]);
-  
+
+      const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      // 모달용 데이터: 시간 + 이름
+      const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
+
+      // 캘린더용 데이터: 이름만
+      const calendarScheduleText = item.name;
+
+      // 캘린더 스케줄 추가
+      if (loadedSchedulesForCalendar.has(date)) {
+        loadedSchedulesForCalendar.get(date).push(calendarScheduleText);
+      } else {
+        loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
+      }
+
+      // 모달 스케줄 추가
+      if (loadedSchedulesForModal.has(date)) {
+        loadedSchedulesForModal.get(date).push(modalScheduleText);
+      } else {
+        loadedSchedulesForModal.set(date, [modalScheduleText]);
+      }
+    });
+
+    setSchedulesForCalendar(loadedSchedulesForCalendar);
+    setSchedulesForModal(loadedSchedulesForModal);
+  }
+}, [data]);
+
+
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -230,32 +250,38 @@ const handleAddSchedule = () => {
           return (
             <div
               key={dayIndex}
-              className={`w-24 h-24 border border-gray-300 flex  items-center relative p-4 ${
+              className={`w-32 h-32 border border-gray-300 flex  items-center relative p-4 ${
                 isNextMonth ? "bg-blue-200 text-gray-500" : isPreviousMonth ? "bg-gray-200" : "bg-white"
               }`}
               onClick={() => isCurrentMonth && formattedDate && openScheduleList(formattedDate)}
             >
              <div className="relative w-full h-full flex flex-col items-start">
   <span className="text-sm font-semibold">{day}</span>
-  {isCurrentMonth && formattedDate && schedules.has(formattedDate) ? (
-    <ul className="text-xs mt-1 space-y-1">
-      {/* 일정 하나만 표시 */}
-      {schedules.get(formattedDate)!.slice(0, 1).map((schedule, idx) => (
-        <li key={idx}>{schedule}</li>
-      ))}
-      {/* 일정이 2개 이상일 때 더보기 표시 */}
-      {schedules.get(formattedDate)!.length > 1 && (
-        <li
-          className="text-blue-500 cursor-pointer"
-          onClick={() => openScheduleList(formattedDate)}
-        >
-          더보기...
-        </li>
-      )}
-    </ul>
-  ) : (
-    <span className="text-xs mt-1">일정 없음</span>
-  )}
+  {isCurrentMonth && formattedDate && schedulesForCalendar.has(formattedDate) ? (
+  <ul className="text-xs mt-1 space-y-1">
+    {/* 일정 하나만 표시 */}
+    {schedulesForCalendar.get(formattedDate)!.slice(0, 2).map((schedule, idx) => (
+      <li
+        key={idx}
+        style={{ color: "#5CA157" }}
+      >
+        {schedule.length > 6 ? `${schedule.slice(0, 6)}...` : schedule}
+      </li>
+    ))}
+    {/* 일정이 2개 이상일 때 더보기 표시 */}
+    {schedulesForCalendar.get(formattedDate)!.length > 2 && (
+      <li
+        className="text-blue-500 cursor-pointer"
+        onClick={() => openScheduleList(formattedDate)}
+      >
+        더보기...
+      </li>
+    )}
+  </ul>
+) : (
+  <span className="text-xs mt-1">일정 없음</span>
+)}
+
 </div>
 
             </div>
@@ -295,7 +321,7 @@ const handleAddSchedule = () => {
           <div className="text-center text-lg">금</div>
           <div className="text-center text-lg">토</div>
         </div>
-        <div className="mt-4" style={{ maxHeight: "500px", overflowY: "auto" }}>
+        <div className="mt-4" style={{ height: "auto" }}>
           {renderCalendar()}
         </div>
       </div>
@@ -307,16 +333,40 @@ const handleAddSchedule = () => {
             <h3 className="text-xl font-semibold mb-4">{selectedDate} 일정</h3>
             <div className="mb-4">
               <ul>
-                {schedules.get(selectedDate)?.map((schedule, index) => (
-                  <li key={index} className="flex justify-between items-center">
-                    <span>{schedule}</span>
+                {schedulesForModal.get(selectedDate)?.map((schedule, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-start gap-4 w-full"
+                  >
+                    <span
+                      style={{
+                        whiteSpace: "normal", // 텍스트가 길면 줄바꿈
+                        wordBreak: "break-word", // 단어가 길 경우 줄바꿈
+                        maxWidth: "70%", // 버튼 영역과 충돌하지 않도록 너비 제한
+                      }}
+                    >
+                      {schedule.length > 8 ? `${schedule.slice(0, 8)}\n${schedule.slice(8)}` : schedule}
+                    </span>
                     <div className="flex gap-2">
-                      <button onClick={() => deleteSchedule(schedule)} className="text-red-500 px-2 py-1 rounded hover:bg-transparent">삭제</button>
-                      <button onClick={() => { /* 수정 로직 */ }} className="text-blue-500 px-2 py-1 rounded hover:bg-transparent">수정</button>
+                      <button
+                        onClick={() => deleteSchedule(schedule)}
+                        className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
+                      >
+                        삭제
+                      </button>
+                      <button
+                        onClick={() => {
+                          /* 수정 로직 */
+                        }}
+                        className="text-blue-500 px-2 py-1 rounded hover:bg-transparent"
+                      >
+                        수정
+                      </button>
                     </div>
                   </li>
                 ))}
               </ul>
+
             </div>
             <div className="flex flex-col gap-4">
               <input

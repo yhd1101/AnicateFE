@@ -12,6 +12,7 @@ const ChatList: React.FC = () => {
   // Chat Query를 호출
   const { data: chatRooms, isLoading, isError, error } = useChatQuery();
 
+
   // 검색 핸들러
   const handleSearch = (searchKeyword: string, searchAnimalSpecies: string) => {
     setKeyword(searchKeyword);
