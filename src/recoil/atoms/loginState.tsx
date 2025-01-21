@@ -14,6 +14,14 @@ export const petModalState = atom<LoginModalState>({
   },
 });
 
+export const periodicModalState = atom<LoginModalState>({
+  key: 'periodicModalState',
+  default: {
+    isModalOpen: false,
+  },
+});
+
+
 export const scheduleModalState = atom<LoginModalState>({
   key: 'scheduleModalState',
   default: { isModalOpen: false }

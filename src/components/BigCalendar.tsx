@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import { useRecoilState } from "recoil";
-import { scheduleModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
+import { periodicModalState, scheduleModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
 import { useSingleScheduleQuery } from "@/services/useScheduleData";
 import { usePetQuery } from "@/services/usePetQuery";
 import axios from "axios";
+import { PeriodicModal } from "./PeriodicModal";
 
 
 export const BigCalendar: React.FC = () => {
@@ -24,6 +25,22 @@ export const BigCalendar: React.FC = () => {
 
   const [schedulesForCalendar, setSchedulesForCalendar] = useState<Map<string, string[]>>(new Map());
   const [schedulesForModal, setSchedulesForModal] = useState<Map<string, string[]>>(new Map());
+  const [, setPeriodicModalState] = useRecoilState(periodicModalState); // 로그인 모달 상태
+
+  const handleLoginClick = () => {
+    setPeriodicModalState({ isModalOpen: true }); // 로그인 모달 열기
+  };
+
+
+
+
+  const [editingSchedule, setEditingSchedule] = useState<{
+    index: number;
+    name: string;
+    startTime: string;
+    endTime: string;
+  } | null>(null);
+  
 
 
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
@@ -101,18 +118,63 @@ const handleAddSchedule = () => {
     Number(endHour)
   )}:${padToTwoDigits(Number(endMinute))}:00Z`;
 
-  // 요청 데이터 생성
-  const scheduleData = {
-    petId: selectedPetId,
-    petName: selectedPetName,
-    name: document.querySelector<HTMLInputElement>("input")?.value || "",
-    startDatetime,
-    endDatetime,
-  };
 
-  // 스케줄 추가 API 호출
-  addSchedule(scheduleData);
-};
+  
+
+  // 요청 데이터 생성
+    const scheduleData = {
+      petId: selectedPetId,
+      petName: selectedPetName,
+      name: document.querySelector<HTMLInputElement>("input")?.value || "",
+      startDatetime,
+      endDatetime,
+    };
+
+    // 스케줄 추가 API 호출
+    addSchedule(scheduleData);
+  };
+  const handleEdit = (index: number, schedule: string) => {
+    // 정규식으로 시간과 이름 분리
+    const match = schedule.match(/(\d{2}:\d{2}) ~ (\d{2}:\d{2}) (.+)/);
+  
+    if (!match) {
+      console.error("스케줄 문자열 형식이 잘못되었습니다:", schedule);
+      return;
+    }
+  
+    const [, startTime, endTime, name] = match;
+  
+    setEditingSchedule({
+      index,
+      name,
+      startTime,
+      endTime,
+    });
+  };
+  
+  
+  const handleSaveEdit = (index: number) => {
+    if (!editingSchedule) return;
+  
+    const updatedSchedule = `${editingSchedule.startTime} ~ ${editingSchedule.endTime} ${editingSchedule.name}`;
+  
+    // 서버로 업데이트 요청 보내기 (필요한 경우)
+    // await axios.put('/api/schedule', { ...editingSchedule });
+  
+    // 로컬 상태 업데이트
+    setSchedulesForModal((prev) => {
+      const updated = new Map(prev);
+      const schedules = updated.get(selectedDate!) || [];
+      schedules[index] = updatedSchedule;
+      updated.set(selectedDate!, schedules);
+      return updated;
+    });
+  
+    setEditingSchedule(null); // 수정 상태 해제
+  };
+  
+
+  
 
   
   
@@ -307,7 +369,7 @@ useEffect(() => {
 
           <span className="font-bold text-xl">{`${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`}</span>
 
-          <button onClick={openScheduleModal} className="px-4 py-2 bg-[#5CA157] text-white rounded-md">
+          <button  onClick={handleLoginClick} className="px-4 py-2 bg-[#5CA157] text-white rounded-md">
             정기 일정
           </button>
         </div>
@@ -326,46 +388,153 @@ useEffect(() => {
         </div>
       </div>
 
+      <PeriodicModal/>
+
       {/* Schedule List */}
       {selectedDate && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center" onClick={closeScheduleList}>
           <div className="bg-white p-6 rounded-md w-1/3" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-semibold mb-4">{selectedDate} 일정</h3>
             <div className="mb-4">
-              <ul>
-                {schedulesForModal.get(selectedDate)?.map((schedule, index) => (
-                  <li
-                    key={index}
-                    className="flex justify-between items-start gap-4 w-full"
-                  >
-                    <span
-                      style={{
-                        whiteSpace: "normal", // 텍스트가 길면 줄바꿈
-                        wordBreak: "break-word", // 단어가 길 경우 줄바꿈
-                        maxWidth: "70%", // 버튼 영역과 충돌하지 않도록 너비 제한
+            <ul>
+              {schedulesForModal.get(selectedDate)?.map((schedule, index) => (
+                <li key={index} className="flex justify-between items-start gap-4 w-full">
+                  {/* 수정 상태 확인 */}
+                  {editingSchedule && editingSchedule.index === index ? (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSaveEdit(index);
                       }}
+                      className="space-y-2 w-full"
                     >
-                      {schedule.length > 8 ? `${schedule.slice(0, 8)}\n${schedule.slice(8)}` : schedule}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => deleteSchedule(schedule)}
-                        className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
-                      >
-                        삭제
-                      </button>
-                      <button
-                        onClick={() => {
-                          /* 수정 로직 */
+                      <input
+                        type="text"
+                        value={editingSchedule.name} // 수정된 스케줄 이름 표시
+                        onChange={(e) =>
+                          setEditingSchedule((prev) => ({
+                            ...prev!,
+                            name: e.target.value,
+                          }))
+                        }
+                        className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={editingSchedule.startTime.split(":")[0]}
+                          onChange={(e) =>
+                            setEditingSchedule((prev) => ({
+                              ...prev!,
+                              startTime: `${e.target.value}:${editingSchedule.startTime.split(":")[1]}`,
+                            }))
+                          }
+                          className="border border-gray-300 rounded-md px-2 py-1"
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={String(i).padStart(2, "0")}>
+                              {String(i).padStart(2, "0")}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={editingSchedule.startTime.split(":")[1]}
+                          onChange={(e) =>
+                            setEditingSchedule((prev) => ({
+                              ...prev!,
+                              startTime: `${editingSchedule.startTime.split(":")[0]}:${e.target.value}`,
+                            }))
+                          }
+                          className="border border-gray-300 rounded-md px-2 py-1"
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={String(i).padStart(2, "0")}>
+                              {String(i).padStart(2, "0")}
+                            </option>
+                          ))}
+                        </select>
+
+                        <span>~</span>
+
+                        <select
+                          value={editingSchedule.endTime.split(":")[0]}
+                          onChange={(e) =>
+                            setEditingSchedule((prev) => ({
+                              ...prev!,
+                              endTime: `${e.target.value}:${editingSchedule.endTime.split(":")[1]}`,
+                            }))
+                          }
+                          className="border border-gray-300 rounded-md px-2 py-1"
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={String(i).padStart(2, "0")}>
+                              {String(i).padStart(2, "0")}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={editingSchedule.endTime.split(":")[1]}
+                          onChange={(e) =>
+                            setEditingSchedule((prev) => ({
+                              ...prev!,
+                              endTime: `${editingSchedule.endTime.split(":")[0]}:${e.target.value}`,
+                            }))
+                          }
+                          className="border border-gray-300 rounded-md px-2 py-1"
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <option key={i} value={String(i).padStart(2, "0")}>
+                              {String(i).padStart(2, "0")}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className="bg-green-500 text-white px-4 py-2 rounded-md"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => deleteSchedule(schedule)}
+                          className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex justify-between w-full">
+                      <span
+                        style={{
+                          whiteSpace: "normal", // 텍스트가 길면 줄바꿈
+                          wordBreak: "break-word", // 단어가 길 경우 줄바꿈
+                          maxWidth: "70%", // 버튼 영역과 충돌하지 않도록 너비 제한
+                          overflowWrap: "break-word", // 길이가 길 경우 자동 줄바꿈
                         }}
-                        className="text-blue-500 px-2 py-1 rounded hover:bg-transparent"
                       >
-                        수정
-                      </button>
+                        {schedule}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => deleteSchedule(schedule)}
+                          className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
+                        >
+                          삭제
+                        </button>
+                        <button
+                          onClick={() => handleEdit(index, schedule)}
+                          className="text-blue-500 px-2 py-1 rounded hover:bg-transparent"
+                        >
+                          수정
+                        </button>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+
 
             </div>
             <div className="flex flex-col gap-4">

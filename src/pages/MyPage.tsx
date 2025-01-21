@@ -7,17 +7,39 @@ import BigCalendar from "@/components/BigCalendar";
 import Header from "@/components/Header";
 import { useUpdateUser } from "@/services/useUpdateUser";
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLogout } from "@/services/useLogout";
+import { useDeleteUser } from "@/services/useDeleteUser";
+import { useDeletePet } from "@/services/useDeletePet";
 
 const Mypage: React.FC = () => {
+    const queryClient = useQueryClient(); // queryClient 가져오기
   const userId = sessionStorage.getItem("id"); // userId는 sessionStorage에 저장되어 있어야 함
   const { data: userData, error: userError, isLoading: userIsLoading } = useUserQuery(Number(userId));
 
-  console.log("sd", userData);
+  console.log("sd", userData?.data.name);
   const token = sessionStorage.getItem("token"); // 토큰 가져오기
 
   const [name, setName] = useState(""); // 이름 상태
   const [experience, setExperience] = useState(0); // 경험 상태
   const [isEditing, setIsEditing] = useState(false); // 수정 모드 상태
+
+  const logout = useLogout();
+
+
+  const deleteUser = useDeleteUser();
+
+  
+
+  const handleDelete = () => {
+    if (window.confirm("정말로 회원 탈퇴를 진행하시겠습니까?")) {
+      deleteUser.mutate(); // 회원 탈퇴 실행
+    }
+  };
+
+  const handleLogout = () => {
+    logout.mutate(); // 로그아웃 실행
+  };
 
 
   
@@ -27,25 +49,25 @@ const Mypage: React.FC = () => {
   }
 
   // 사용자 데이터 요청
+  const handleSave = async () => {
 
   
-
-
-  const handleSave = async () => {
     if (!token) {
       alert("로그인 정보가 없습니다.");
       return;
     }
-
+  
     const tokenWithoutQuotes = token.replace(/^"|"$/g, ""); // 따옴표 제거
-
+  
     const updateUserDTO = {
-      name,
-      years_of_experience: experience,
+      name: name || userData?.data.name, // 입력값이 없으면 기존 이름 사용
+      years_of_experience: experience !== undefined ? experience : userData?.data.years_of_experience, // 입력값이 없으면 기존 경험치 사용
     };
-
+  
     try {
       console.log("수정 요청 데이터:", updateUserDTO);
+  
+      // 서버로 데이터 전송
       const response = await axios.put(
         "http://localhost:8080/api/user",
         updateUserDTO,
@@ -55,8 +77,12 @@ const Mypage: React.FC = () => {
           },
         }
       );
-
+  
       console.log("업데이트 성공:", response.data);
+  
+      // 캐시 무효화: ['user', userId] 쿼리를 무효화하여 새 데이터를 가져오게 함
+      await queryClient.invalidateQueries(["user", userId]);
+  
       alert("사용자 정보가 성공적으로 업데이트되었습니다!");
       setIsEditing(false); // 수정 모드 종료
     } catch (error) {
@@ -182,12 +208,14 @@ const Mypage: React.FC = () => {
            
          
               <div className="flex gap-3">
-                <button      
+                <button
+                  onClick={handleDelete}      
                   className="text-xs font-medium text-white bg-[#FF0000] py-2 px-4 rounded-md cursor-pointer hover:bg-[#999999]"
                 >
                   회원탈퇴
                 </button>
-                <button      
+                <button
+                  onClick={handleLogout}      
                   className="text-xs font-medium text-white bg-[#ADADAD] py-2 px-4 rounded-md cursor-pointer hover:bg-[#999999]"
                 >
                   로그아웃
@@ -248,6 +276,7 @@ const Mypage: React.FC = () => {
                     petName={pet.name}
                     petAge={pet.age}
                     petImageSrc={pet.picture}
+                    petId={pet.id}
                   />
                 ))
               ) : (

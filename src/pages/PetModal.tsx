@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import { useRecoilState } from "recoil";
 import { petModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
 import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const PetModal = () => {
   const [isModalOpen, setIsModalOpen] = useRecoilState(petModalState); // 상태 사용
@@ -14,6 +15,7 @@ export const PetModal = () => {
   const [selectedAge, setSelectedAge] = useState<string>(''); // 반려동물 나이
   const [speciesList, setSpeciesList] = useState<any[]>([]); // 종 목록 상태
   const [breedList, setBreedList] = useState<any[]>([]); // 품종 목록 상태
+  const queryClient = useQueryClient(); 
 
   // 종 목록 가져오기
   useEffect(() => {
@@ -140,8 +142,10 @@ export const PetModal = () => {
           "Authorization": `Bearer ${tokenWithoutQuotes}`,
         },
       });
-      console.log("Response:", response.data); // 성공적인 응답 확인
+      queryClient.invalidateQueries(['pets', Number(sessionStorage.getItem('userId'))]);
+
       setIsModalOpen({ isModalOpen: false });
+      alert("반려동물이 성공적으로 등록되었습니다!");
     } catch (error) {
       console.error("Error submitting pet data:", error);
     }
