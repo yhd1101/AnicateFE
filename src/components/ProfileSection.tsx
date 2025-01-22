@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRecoilState } from 'recoil';
-import { petModalState } from '@/recoil/atoms/loginState';
+import { petModalState, petUpdateModalState } from '@/recoil/atoms/loginState';
 import PetImage from './PetImage';
 import PetInfo from './PetInfo';
 import { useDeletePet } from '@/services/useDeletePet';
@@ -45,6 +45,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   petId,
 }) => {
   const [isModalOpen, setIsModalOpen] = useRecoilState(petModalState);
+  const [isUpdateModalOpen, setUpdateIsModalOpen] = useRecoilState(petUpdateModalState);
 
   const deletePet = useDeletePet();
 
@@ -59,6 +60,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     if (petName === '등록하기') {
       setIsModalOpen({ isModalOpen: true });
     }
+  };
+
+  const handleUpdateClick = () => {
+      setUpdateIsModalOpen({ isModalOpen: true });
+
   };
 
   return (
@@ -95,6 +101,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         {showEditButton && petName !== '등록하기' && (
           <div className="flex justify-end gap-2">
             <button
+              onClick={handleUpdateClick}
               className="bg-[#5CA157] text-white font-semibold py-1 px-2 rounded-md hover:bg-[#4A8B42]"
             >
               수정하기

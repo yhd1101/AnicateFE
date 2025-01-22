@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLogout } from "@/services/useLogout";
 import { useDeleteUser } from "@/services/useDeleteUser";
 import { useDeletePet } from "@/services/useDeletePet";
+import { PetUpdateModal } from "@/components/Pet/PetUpdateModal";
 
 const Mypage: React.FC = () => {
     const queryClient = useQueryClient(); // queryClient 가져오기
@@ -321,6 +322,7 @@ const Mypage: React.FC = () => {
         </div>
 
         <PetModal />
+        <PetUpdateModal/>
         <div className="flex flex-col items-start gap-6 w-full max-w-4xl mt-8 px-4">
           <div className="mt-4 flex">
             <h3 className="text-[#5CA157] font-bold text-2xl">스케줄 관리</h3>

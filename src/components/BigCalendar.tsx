@@ -6,6 +6,9 @@ import { useSingleScheduleQuery } from "@/services/useScheduleData";
 import { usePetQuery } from "@/services/usePetQuery";
 import axios from "axios";
 import { PeriodicModal } from "./PeriodicModal";
+import { useUpdateSingleSchedule } from "@/services/useUpdateSingleSchedule";
+import { some } from "lodash";
+import { useDeleteSingleSchedule } from "@/services/useDeleteSingleSchedule";
 
 
 export const BigCalendar: React.FC = () => {
@@ -24,13 +27,18 @@ export const BigCalendar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useRecoilState(scheduleModalState); // ScheduleModal 상태 관리
 
   const [schedulesForCalendar, setSchedulesForCalendar] = useState<Map<string, string[]>>(new Map());
+  const [schedulesForModalWithId, setSchedulesForModalWithId] = useState<Map<string, string[]>>(new Map());
+
   const [schedulesForModal, setSchedulesForModal] = useState<Map<string, string[]>>(new Map());
   const [, setPeriodicModalState] = useRecoilState(periodicModalState); // 로그인 모달 상태
+
+
+  const deleteSingleSchedule = useDeleteSingleSchedule();
+
 
   const handleLoginClick = () => {
     setPeriodicModalState({ isModalOpen: true }); // 로그인 모달 열기
   };
-
 
 
 
@@ -45,6 +53,9 @@ export const BigCalendar: React.FC = () => {
 
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
 const [selectedPetName, setSelectedPetName] = useState<string | null>(null);
+
+const updateSchedule = useUpdateSingleSchedule();
+
 
   console.log(data);
   console.log("petdatas", petData);
@@ -153,47 +164,140 @@ const handleAddSchedule = () => {
   };
   
   
-  const handleSaveEdit = (index: number) => {
-    if (!editingSchedule) return;
-  
-    const updatedSchedule = `${editingSchedule.startTime} ~ ${editingSchedule.endTime} ${editingSchedule.name}`;
-  
-    // 서버로 업데이트 요청 보내기 (필요한 경우)
-    // await axios.put('/api/schedule', { ...editingSchedule });
-  
-    // 로컬 상태 업데이트
-    setSchedulesForModal((prev) => {
-      const updated = new Map(prev);
-      const schedules = updated.get(selectedDate!) || [];
-      schedules[index] = updatedSchedule;
-      updated.set(selectedDate!, schedules);
-      return updated;
-    });
-  
-    setEditingSchedule(null); // 수정 상태 해제
-  };
-  
 
   
 
   
   
 
+
+// useEffect(() => {
+//   if (data) {
+//     const loadedSchedulesForModal = new Map();
+//     const loadedSchedulesForCalendar = new Map();
+
+//     data.forEach((item) => {
+//       // 날짜 추출
+//       const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
+//         year: "numeric",
+//         month: "2-digit",
+//         day: "2-digit",
+//       }).replace(/\./g, "").trim().replace(/\s/g, "-"); // YYYY-MM-DD 형식
+
+//       // 시간 추출
+//       const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       });
+
+//       const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       });
+
+//       // petId 콘솔 출력
+//       console.log(`Pet ID: ${item.petId}`);
+
+//       // 모달용 데이터: 시간 + 이름
+//       const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
+
+//       // 캘린더용 데이터: 이름만
+//       const calendarScheduleText = item.name;
+
+//       // 캘린더 스케줄 추가
+//       if (loadedSchedulesForCalendar.has(date)) {
+//         loadedSchedulesForCalendar.get(date).push(calendarScheduleText);
+//       } else {
+//         loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
+//       }
+
+//       // 모달 스케줄 추가
+//       if (loadedSchedulesForModal.has(date)) {
+//         loadedSchedulesForModal.get(date).push(modalScheduleText);
+//       } else {
+//         loadedSchedulesForModal.set(date, [modalScheduleText]);
+//       }
+//     });
+
+//     setSchedulesForCalendar(loadedSchedulesForCalendar);
+//     setSchedulesForModal(loadedSchedulesForModal);
+//   }
+// }, [data]);
+
+
+
+
+// useEffect(() => {
+//   if (data) {
+//     const loadedSchedulesForModal = new Map<string, string[]>();
+//     const loadedSchedulesForCalendar = new Map<string, string[]>();
+//     const loadedSchedulesWithId = new Map<string, string[]>(); // ID 포함 데이터 저장
+
+//     data.forEach((item) => {
+//       const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
+//         year: "numeric",
+//         month: "2-digit",
+//         day: "2-digit",
+//       }).replace(/\./g, "").trim().replace(/\s/g, "-");
+
+//       const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       });
+
+//       const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         hour12: false,
+//       });
+
+//       console.log("tesm", item.petId);
+
+//       // 화면용 데이터: 시간 + 이름
+//       const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
+
+//       // 내부 로직용 데이터: 시간 + 이름 + ID
+//       const modalScheduleTextWithId = `${modalScheduleText} (ID: ${item.id})  (Pet: ${item.petId})`;
+
+//       if (loadedSchedulesForModal.has(date)) {
+//         loadedSchedulesForModal.get(date)!.push(modalScheduleText);
+//         loadedSchedulesWithId.get(date)!.push(modalScheduleTextWithId);
+//       } else {
+//         loadedSchedulesForModal.set(date, [modalScheduleText]);
+//         loadedSchedulesWithId.set(date, [modalScheduleTextWithId]);
+//       }
+
+//       const calendarScheduleText = item.name;
+//       if (loadedSchedulesForCalendar.has(date)) {
+//         loadedSchedulesForCalendar.get(date)!.push(calendarScheduleText);
+//       } else {
+//         loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
+//       }
+//     });
+
+//     setSchedulesForCalendar(loadedSchedulesForCalendar);
+//     setSchedulesForModal(loadedSchedulesForModal);
+//     // ID 포함 데이터를 따로 저장
+//     setSchedulesForModalWithId(loadedSchedulesWithId);
+//   }
+// }, [data]);
 
 useEffect(() => {
   if (data) {
-    const loadedSchedulesForModal = new Map();
-    const loadedSchedulesForCalendar = new Map();
+    const loadedSchedulesForModal = new Map<string, string[]>();
+    const loadedSchedulesForCalendar = new Map<string, string[]>();
+    const loadedSchedulesWithId = new Map<string, string[]>(); // ID 포함 데이터 저장
 
     data.forEach((item) => {
-      // 날짜 추출
       const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).replace(/\./g, "").trim().replace(/\s/g, "-"); // YYYY-MM-DD 형식
+      }).replace(/\./g, "").trim().replace(/\s/g, "-");
 
-      // 시간 추출
       const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
         hour: "2-digit",
         minute: "2-digit",
@@ -206,31 +310,170 @@ useEffect(() => {
         hour12: false,
       });
 
-      // 모달용 데이터: 시간 + 이름
       const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
+      const modalScheduleTextWithId = `${modalScheduleText} (ID: ${item.id})  (Pet: ${item.petId})`;
 
-      // 캘린더용 데이터: 이름만
-      const calendarScheduleText = item.name;
-
-      // 캘린더 스케줄 추가
-      if (loadedSchedulesForCalendar.has(date)) {
-        loadedSchedulesForCalendar.get(date).push(calendarScheduleText);
-      } else {
-        loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
-      }
-
-      // 모달 스케줄 추가
       if (loadedSchedulesForModal.has(date)) {
-        loadedSchedulesForModal.get(date).push(modalScheduleText);
+        loadedSchedulesForModal.get(date)!.push(modalScheduleText);
+        loadedSchedulesWithId.get(date)!.push(modalScheduleTextWithId);
       } else {
         loadedSchedulesForModal.set(date, [modalScheduleText]);
+        loadedSchedulesWithId.set(date, [modalScheduleTextWithId]);
+      }
+
+      const calendarScheduleText = item.name;
+      if (loadedSchedulesForCalendar.has(date)) {
+        loadedSchedulesForCalendar.get(date)!.push(calendarScheduleText);
+      } else {
+        loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
       }
     });
 
     setSchedulesForCalendar(loadedSchedulesForCalendar);
     setSchedulesForModal(loadedSchedulesForModal);
+    setSchedulesForModalWithId(loadedSchedulesWithId);
   }
 }, [data]);
+
+
+
+
+const handleSaveEdit = (index: number) => {
+  if (!editingSchedule || !schedulesForModal.has(selectedDate!)) return;
+
+  const scheduleList = schedulesForModalWithId.get(selectedDate!)!;
+  console.log("s3csc" , scheduleList);
+  const originalSchedule = scheduleList[index];
+  console.log("orgs", originalSchedule);
+
+  // 기존 스케줄에서 ID 추출
+  const match = originalSchedule.match(/ID: (\d+)/);
+  const id = match ? Number(match[1]) : null;
+  console.log(typeof id , "sdasd");
+
+  const petIdMatch = originalSchedule.match(/Pet: (\d+)/);
+  const petId = petIdMatch ? Number(petIdMatch[1]) : null;
+
+  if (!id) {
+    console.error("스케줄 ID를 찾을 수 없습니다:", originalSchedule);
+    return;
+  }
+
+  // 기존 스케줄 데이터를 추출
+  const timeMatch = originalSchedule.match(/(\d{2}:\d{2}) ~ (\d{2}:\d{2}) (.+) \(ID:/);
+  if (!timeMatch) {
+    console.error("스케줄 데이터 형식이 올바르지 않습니다:", originalSchedule);
+    return;
+  }
+  const [, startTime, endTime, name] = timeMatch;
+  console.log("names" , name)
+
+  // API 요청 데이터 구성
+  const updateData = {
+    id: id, // 추출된 스케줄 ID
+    petId: petId, // 선택된 Pet ID
+    name: editingSchedule.name || name, // 수정되지 않은 경우 기존 이름 사용
+    startDatetime: `${selectedDate}T${editingSchedule.startTime || startTime}:00Z`,
+    endDatetime: `${selectedDate}T${editingSchedule.endTime || endTime}:00Z`,
+    petName: selectedPetName || "",
+  };
+
+  console.log("업데이트 데이터:", updateData);
+
+  // 업데이트 API 호출
+  updateSchedule.mutate(updateData, {
+    onSuccess: () => {
+      setEditingSchedule(null); // 수정 모드 종료
+      alert("스케줄이 성공적으로 수정되었습니다.");
+    },
+    onError: (error) => {
+      console.error("스케줄 수정 중 오류:", error);
+    },
+  });
+};
+
+const deleteSchedule = (index: number) => {
+  if (!schedulesForModalWithId.has(selectedDate!)) return;
+
+  const scheduleList = schedulesForModalWithId.get(selectedDate!)!;
+  console.log("스케줄 리스트:", scheduleList);
+
+  const originalSchedule = scheduleList[index];
+  console.log("원본 스케줄:", originalSchedule);
+
+  // ID 추출
+  const idMatch = originalSchedule.match(/ID: (\d+)/);
+  const id = idMatch ? Number(idMatch[1]) : null;
+
+  if (!id) {
+    console.error("스케줄 ID를 찾을 수 없습니다:", originalSchedule);
+    return;
+  }
+
+  console.log("삭제할 스케줄 ID:", id);
+
+  // React Query를 사용한 삭제 API 호출
+  deleteSingleSchedule.mutate(id, {
+    onSuccess: () => {
+      // 성공 시 UI에서 삭제
+      setSchedulesForModalWithId((prevSchedules) => {
+        const updatedSchedules = new Map(prevSchedules);
+        const currentSchedules = updatedSchedules.get(selectedDate!)?.filter((_, i) => i !== index) || [];
+        updatedSchedules.set(selectedDate!, currentSchedules);
+        return updatedSchedules;
+      });
+
+      alert("스케줄이 성공적으로 삭제되었습니다.");
+    },
+    onError: (error) => {
+      console.error("스케줄 삭제 중 오류:", error);
+    },
+  });
+};
+
+
+
+
+// const handleSaveEdit = (index: number) => {
+//   if (!editingSchedule || !schedulesForModal.has(selectedDate!)) return;
+
+//   const scheduleList = schedulesForModal.get(selectedDate!);
+//   const originalSchedule = scheduleList![index];
+
+//   // 기존 스케줄 데이터를 추출
+//   const match = originalSchedule.match(/(\d{2}:\d{2}) ~ (\d{2}:\d{2}) (.+)/);
+//   if (!match) {
+//     console.error("스케줄 데이터 형식이 올바르지 않습니다:", originalSchedule);
+//     return;
+//   }
+//   const [, startTime, endTime, name] = match;
+
+//   // API 요청 데이터 구성
+//   const updateData = {
+//     id: 323, // 이 부분은 실제 스케줄 ID로 교체해야 합니다.
+//     petId: selectedPetId, // 선택된 Pet ID
+//     name: editingSchedule.name || name, // 수정되지 않은 경우 기존 이름 사용
+//     startDatetime: `${selectedDate}T${editingSchedule.startTime || startTime}:00Z`,
+//     endDatetime: `${selectedDate}T${editingSchedule.endTime || endTime}:00Z`,
+//     petName: selectedPetName || "",
+//   };
+//   console.log("ss ", updateData);
+
+//   // 업데이트 API 호출
+//   updateSchedule.mutate(updateData, {
+//     onSuccess: () => {
+//       setEditingSchedule(null); // 수정 모드 종료
+//       alert("스케줄이 성공적으로 수정되었습니다.");
+//     },
+//     onError: (error) => {
+//       console.error("스케줄 수정 중 오류:", error);
+//       alert("스케줄 수정에 실패했습니다.");
+//     },
+//   });
+// };
+
+
+
 
 
   const generateCalendar = () => {
@@ -282,17 +525,14 @@ useEffect(() => {
     closeScheduleList(); // 스케줄 리스트 모달 닫기
   };
 
-  const deleteSchedule = (schedule: string) => {
-    if (selectedDate) {
-      setSchedules((prevSchedules) => {
-        const updatedSchedules = new Map(prevSchedules);
-        const currentSchedules = updatedSchedules.get(selectedDate)?.filter(item => item !== schedule) || [];
-        updatedSchedules.set(selectedDate, currentSchedules);
-        return updatedSchedules;
-      });
-    }
+  const extractIdFromScheduleText = (scheduleText: string): number | null => {
+    const match = scheduleText.match(/\(ID: (\d+)\)/);
+    return match ? Number(match[1]) : null;
   };
+  
 
+ 
+  
   const renderCalendar = () => {
     const weeks = generateCalendar();
   
@@ -398,7 +638,7 @@ useEffect(() => {
             <div className="mb-4">
             <ul>
               {schedulesForModal.get(selectedDate)?.map((schedule, index) => (
-                <li key={index} className="flex justify-between items-start gap-4 w-full">
+                <li key={index} className="flex justify-between items-start gap- w-full">
                   {/* 수정 상태 확인 */}
                   {editingSchedule && editingSchedule.index === index ? (
                     <form
@@ -514,10 +754,11 @@ useEffect(() => {
                         }}
                       >
                         {schedule}
+                        
                       </span>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => deleteSchedule(schedule)}
+                          onClick={() => deleteSchedule(index, schedule)}
                           className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
                         >
                           삭제

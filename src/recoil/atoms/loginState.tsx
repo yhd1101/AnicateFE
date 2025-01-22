@@ -14,6 +14,14 @@ export const petModalState = atom<LoginModalState>({
   },
 });
 
+export const petUpdateModalState = atom<LoginModalState>({
+  key: 'petUpdateModalState',  // 고유한 key를 설정
+  default: {
+    isModalOpen: false,  // 기본값은 모달이 닫힌 상태
+  },
+});
+
+
 export const periodicModalState = atom<LoginModalState>({
   key: 'periodicModalState',
   default: {
