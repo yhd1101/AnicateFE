@@ -13,14 +13,14 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-  //   proxy: {
-  //     // WebSocket 프록시 설정
-  //     '/chat-socket': {
-  //       target: 'http://localhost:8080', // Spring 서버 주소
-  //       changeOrigin: true, // Origin 헤더 변경
-  //       ws: true, // WebSocket 프록시 활성화
-  //     },
-  //   },
+    proxy: {
+      // WebSocket 프록시 설정
+      '/chat-socket': {
+        target: 'http://localhost:8080', // Spring 서버 주소
+        changeOrigin: true, // Origin 헤더 변경
+        ws: true, // WebSocket 프록시 활성화
+      },
+    },
   },
   base: process.env.NODE_ENV === 'development' ? '/' : './',
   build: {

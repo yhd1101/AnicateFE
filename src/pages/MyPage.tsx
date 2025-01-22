@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useUserQuery } from "@/services/useUserQuery"; // React Query 훅 가져오기
 import ProfileSection from "@/components/ProfileSection";
 import { usePetQuery } from "@/services/usePetQuery"; // 반려동물 데이터 훅
@@ -12,6 +12,7 @@ import { useLogout } from "@/services/useLogout";
 import { useDeleteUser } from "@/services/useDeleteUser";
 import { useDeletePet } from "@/services/useDeletePet";
 import { PetUpdateModal } from "@/components/Pet/PetUpdateModal";
+import Calendar from "@/components/Calendar";
 
 const Mypage: React.FC = () => {
     const queryClient = useQueryClient(); // queryClient 가져오기
@@ -20,6 +21,7 @@ const Mypage: React.FC = () => {
 
   console.log("sd", userData?.data.name);
   const token = sessionStorage.getItem("token"); // 토큰 가져오기
+  const [isSmallScreen, setIsSmallScreen] = useState(false); // 화면 크기 상태
 
   const [name, setName] = useState(""); // 이름 상태
   const [experience, setExperience] = useState(0); // 경험 상태
@@ -29,6 +31,19 @@ const Mypage: React.FC = () => {
 
 
   const deleteUser = useDeleteUser();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth <= 768); // 768px 이하로 감지
+    };
+
+    handleResize(); // 초기 실행
+    window.addEventListener("resize", handleResize); // 윈도우 크기 변경 이벤트 리스너 추가
+
+    return () => {
+      window.removeEventListener("resize", handleResize); // 정리
+    };
+  }, []);
 
   
 
@@ -328,7 +343,15 @@ const Mypage: React.FC = () => {
             <h3 className="text-[#5CA157] font-bold text-2xl">스케줄 관리</h3>
           </div>
           </div>
-        <BigCalendar />
+          {isSmallScreen ? (
+          <Calendar
+            reminderMessage="작은 화면에서는 이 캘린더가 사용됩니다."
+            scheduleDates={["2025-01-20", "2025-01-21", "2025-01-22"]}
+          />
+        ) : (
+          <BigCalendar />
+        )}
+       
       </div>
     </>
   );

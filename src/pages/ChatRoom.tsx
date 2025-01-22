@@ -2,48 +2,37 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
-import Header from "@/components/Header";
 import axios from "axios";
+import Header from "@/components/Header";
 
 const ChatRoom: React.FC = () => {
-  const { roomId } = useParams<{ roomId: string }>(); // URL에서 roomId 추출
+  const { roomId } = useParams<{ roomId: string }>();
   const [messages, setMessages] = useState<
-    { senderName: string; content: string; timestamp?: string }[]
-  >([]);
+  { senderName: string; content: string; timestamp?: string }[]
+>([]); // 빈 배열로 초기화
+
   const [newMessage, setNewMessage] = useState("");
   const stompClientRef = useRef<Client | null>(null);
 
-  // JWT 토큰 가져오기
   const getToken = (): string => {
     const token = sessionStorage.getItem("token");
-    if (!token) {
-      console.error("Token not found in sessionStorage!");
-      throw new Error("Authentication token is missing");
-    }
-    return token.replace(/"/g, ""); // 따옴표 제거
+    if (!token) throw new Error("Authentication token is missing");
+    return token.replace(/"/g, "");
   };
 
   useEffect(() => {
-    if (!roomId) {
-      console.error("Room ID is missing!");
-      return;
-    }
+    if (!roomId) return;
 
     const token = getToken();
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("/chat-socket"), // Proxy 설정으로 경로 수정
-      connectHeaders: {
-        Authorization: `Bearer ${token}`, // JWT 토큰 포함
-      },
-      debug: (str) => console.log(`STOMP Debug: ${str}`), // 디버깅 로그
-      reconnectDelay: 5000, // 연결 재시도 딜레이
+      webSocketFactory: () => new SockJS("/chat-socket"),
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      debug: (str) => console.log("WebSocket debug:", str),
+      reconnectDelay: 5000,
     });
 
     client.onConnect = () => {
-      console.log("Connected to WebSocket ✅");
-
-      // WebSocket 메시지 수신 시 처리
       client.subscribe(`/topic/chat/${roomId}`, (message) => {
         const receivedMessage = JSON.parse(message.body);
         setMessages((prev) => [
@@ -56,83 +45,87 @@ const ChatRoom: React.FC = () => {
         ]);
       });
 
-      fetchChatLogs(token); // 기존 채팅 기록 로드
+      fetchChatLogs(token);
     };
 
-    client.onStompError = (frame) => {
-      console.error("STOMP Error:", frame.headers["message"]);
-      console.error("Details:", frame.body);
-    };
-
-    client.activate(); // WebSocket 활성화
+    client.activate();
     stompClientRef.current = client;
 
     return () => {
-      if (stompClientRef.current) {
-        stompClientRef.current.deactivate();
-        console.log("WebSocket connection closed");
-      }
+      client.deactivate();
     };
   }, [roomId]);
 
-  // 기존 채팅 기록 가져오기
   const fetchChatLogs = async (token: string) => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/chat/rooms/${roomId}/messages`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `http://localhost:8080/api/chat/rooms/${roomId}/messages`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      const { data } = response.data; // 응답 데이터에서 메시지 목록 가져오기
+
+
+      console.log(response, "resposnesss");
+  
+      // 응답 데이터가 배열인지 확인
+      const data = response.data.data;
+      console.log("231233", data.data);
       if (Array.isArray(data)) {
+        console.log("dars", data);
+
         setMessages(
-          data.map((msg: any) => ({
+          data.map((msg) => ({
+        
             senderName: msg.senderName,
             content: msg.content,
             timestamp: msg.sentAt,
           }))
         );
       } else {
-        console.error("Invalid data format:", response.data);
+        console.error("Invalid response format:", data);
+        setMessages([]); // 비어 있는 상태로 설정
       }
     } catch (error) {
       console.error("Failed to fetch chat logs:", error);
-      if (axios.isAxiosError(error)) {
-        console.error("Axios error details:", error.response?.data);
-      }
+      setMessages([]); // 에러 발생 시 빈 배열로 설정
     }
   };
+  
 
-  // 메시지 전송 핸들러
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
-
-    if (!stompClientRef.current || !stompClientRef.current.connected) {
-      console.error("WebSocket client is not connected!");
+    if (!newMessage.trim()) {
+      alert("메시지를 입력하세요.");
       return;
     }
-
-    const token = getToken();
+    if (newMessage.length > 1000) {
+      alert("메시지는 1000자를 초과할 수 없습니다.");
+      return;
+    }
+  
     const messagePayload = {
       content: newMessage,
       roomId,
+      type: "SYSTEM",
     };
-
-    // WebSocket을 통해 메시지 전송
-    stompClientRef.current.publish({
+  
+    const token = getToken(); // JWT 토큰 가져오기
+  
+    console.log("Sending payload:", messagePayload);
+  
+    stompClientRef.current?.publish({
       destination: `/app/chat/${roomId}`,
       body: JSON.stringify(messagePayload),
+      headers: { Authorization: `Bearer ${token}` }, // 헤더에 JWT 토큰 추가
     });
-
-    // 전송된 메시지를 로컬 상태에 추가
+  
     setMessages((prev) => [
       ...prev,
       { senderName: "You", content: newMessage, timestamp: new Date().toLocaleString() },
     ]);
-    setNewMessage(""); // 입력 필드 초기화
+    setNewMessage("");
   };
-
+  
+  
   return (
     <div className="bg-white h-screen flex flex-col">
       <Header />

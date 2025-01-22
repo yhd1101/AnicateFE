@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Modal from "react-modal";
 import { useRecoilState } from "recoil";
 import { periodicModalState, scheduleModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
 import { useSingleScheduleQuery } from "@/services/useScheduleData";
@@ -7,10 +6,7 @@ import { usePetQuery } from "@/services/usePetQuery";
 import axios from "axios";
 import { PeriodicModal } from "./PeriodicModal";
 import { useUpdateSingleSchedule } from "@/services/useUpdateSingleSchedule";
-import { some } from "lodash";
 import { useDeleteSingleSchedule } from "@/services/useDeleteSingleSchedule";
-
-
 export const BigCalendar: React.FC = () => {
 
   
@@ -163,127 +159,6 @@ const handleAddSchedule = () => {
     });
   };
   
-  
-
-  
-
-  
-  
-
-
-// useEffect(() => {
-//   if (data) {
-//     const loadedSchedulesForModal = new Map();
-//     const loadedSchedulesForCalendar = new Map();
-
-//     data.forEach((item) => {
-//       // 날짜 추출
-//       const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
-//         year: "numeric",
-//         month: "2-digit",
-//         day: "2-digit",
-//       }).replace(/\./g, "").trim().replace(/\s/g, "-"); // YYYY-MM-DD 형식
-
-//       // 시간 추출
-//       const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
-//         hour: "2-digit",
-//         minute: "2-digit",
-//         hour12: false,
-//       });
-
-//       const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
-//         hour: "2-digit",
-//         minute: "2-digit",
-//         hour12: false,
-//       });
-
-//       // petId 콘솔 출력
-//       console.log(`Pet ID: ${item.petId}`);
-
-//       // 모달용 데이터: 시간 + 이름
-//       const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
-
-//       // 캘린더용 데이터: 이름만
-//       const calendarScheduleText = item.name;
-
-//       // 캘린더 스케줄 추가
-//       if (loadedSchedulesForCalendar.has(date)) {
-//         loadedSchedulesForCalendar.get(date).push(calendarScheduleText);
-//       } else {
-//         loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
-//       }
-
-//       // 모달 스케줄 추가
-//       if (loadedSchedulesForModal.has(date)) {
-//         loadedSchedulesForModal.get(date).push(modalScheduleText);
-//       } else {
-//         loadedSchedulesForModal.set(date, [modalScheduleText]);
-//       }
-//     });
-
-//     setSchedulesForCalendar(loadedSchedulesForCalendar);
-//     setSchedulesForModal(loadedSchedulesForModal);
-//   }
-// }, [data]);
-
-
-
-
-// useEffect(() => {
-//   if (data) {
-//     const loadedSchedulesForModal = new Map<string, string[]>();
-//     const loadedSchedulesForCalendar = new Map<string, string[]>();
-//     const loadedSchedulesWithId = new Map<string, string[]>(); // ID 포함 데이터 저장
-
-//     data.forEach((item) => {
-//       const date = new Date(item.startDatetime).toLocaleDateString("ko-KR", {
-//         year: "numeric",
-//         month: "2-digit",
-//         day: "2-digit",
-//       }).replace(/\./g, "").trim().replace(/\s/g, "-");
-
-//       const startTime = new Date(item.startDatetime).toLocaleTimeString("ko-KR", {
-//         hour: "2-digit",
-//         minute: "2-digit",
-//         hour12: false,
-//       });
-
-//       const endTime = new Date(item.endDatetime).toLocaleTimeString("ko-KR", {
-//         hour: "2-digit",
-//         minute: "2-digit",
-//         hour12: false,
-//       });
-
-//       console.log("tesm", item.petId);
-
-//       // 화면용 데이터: 시간 + 이름
-//       const modalScheduleText = `${startTime} ~ ${endTime} ${item.name}`;
-
-//       // 내부 로직용 데이터: 시간 + 이름 + ID
-//       const modalScheduleTextWithId = `${modalScheduleText} (ID: ${item.id})  (Pet: ${item.petId})`;
-
-//       if (loadedSchedulesForModal.has(date)) {
-//         loadedSchedulesForModal.get(date)!.push(modalScheduleText);
-//         loadedSchedulesWithId.get(date)!.push(modalScheduleTextWithId);
-//       } else {
-//         loadedSchedulesForModal.set(date, [modalScheduleText]);
-//         loadedSchedulesWithId.set(date, [modalScheduleTextWithId]);
-//       }
-
-//       const calendarScheduleText = item.name;
-//       if (loadedSchedulesForCalendar.has(date)) {
-//         loadedSchedulesForCalendar.get(date)!.push(calendarScheduleText);
-//       } else {
-//         loadedSchedulesForCalendar.set(date, [calendarScheduleText]);
-//       }
-//     });
-
-//     setSchedulesForCalendar(loadedSchedulesForCalendar);
-//     setSchedulesForModal(loadedSchedulesForModal);
-//     // ID 포함 데이터를 따로 저장
-//     setSchedulesForModalWithId(loadedSchedulesWithId);
-//   }
-// }, [data]);
 
 useEffect(() => {
   if (data) {
@@ -430,50 +305,6 @@ const deleteSchedule = (index: number) => {
     },
   });
 };
-
-
-
-
-// const handleSaveEdit = (index: number) => {
-//   if (!editingSchedule || !schedulesForModal.has(selectedDate!)) return;
-
-//   const scheduleList = schedulesForModal.get(selectedDate!);
-//   const originalSchedule = scheduleList![index];
-
-//   // 기존 스케줄 데이터를 추출
-//   const match = originalSchedule.match(/(\d{2}:\d{2}) ~ (\d{2}:\d{2}) (.+)/);
-//   if (!match) {
-//     console.error("스케줄 데이터 형식이 올바르지 않습니다:", originalSchedule);
-//     return;
-//   }
-//   const [, startTime, endTime, name] = match;
-
-//   // API 요청 데이터 구성
-//   const updateData = {
-//     id: 323, // 이 부분은 실제 스케줄 ID로 교체해야 합니다.
-//     petId: selectedPetId, // 선택된 Pet ID
-//     name: editingSchedule.name || name, // 수정되지 않은 경우 기존 이름 사용
-//     startDatetime: `${selectedDate}T${editingSchedule.startTime || startTime}:00Z`,
-//     endDatetime: `${selectedDate}T${editingSchedule.endTime || endTime}:00Z`,
-//     petName: selectedPetName || "",
-//   };
-//   console.log("ss ", updateData);
-
-//   // 업데이트 API 호출
-//   updateSchedule.mutate(updateData, {
-//     onSuccess: () => {
-//       setEditingSchedule(null); // 수정 모드 종료
-//       alert("스케줄이 성공적으로 수정되었습니다.");
-//     },
-//     onError: (error) => {
-//       console.error("스케줄 수정 중 오류:", error);
-//       alert("스케줄 수정에 실패했습니다.");
-//     },
-//   });
-// };
-
-
-
 
 
   const generateCalendar = () => {
@@ -850,6 +681,7 @@ const deleteSchedule = (index: number) => {
 
 
     </div>
+    
   );
 };
 
