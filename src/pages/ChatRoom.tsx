@@ -177,6 +177,12 @@ const ChatRoom: React.FC = () => {
           placeholder="Type your message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault(); // Enter 시 기본 동작 방지
+              handleSendMessage();
+            }
+          }}
           className="flex-1 p-3 rounded-md bg-[#F9F7DE] focus:outline-none focus:ring-2 focus:ring-[#5CA157]"
         />
         <button

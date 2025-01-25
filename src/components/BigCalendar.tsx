@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useRecoilState } from "recoil";
-import { periodicModalState, scheduleModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
+import { periodicModalState, scheduleModalState, singleScheduleModalState } from "@/recoil/atoms/loginState"; // Recoil 상태 임포트
 import { useSingleScheduleQuery } from "@/services/useScheduleData";
 import { usePetQuery } from "@/services/usePetQuery";
 import axios from "axios";
 import { PeriodicModal } from "./PeriodicModal";
 import { useUpdateSingleSchedule } from "@/services/useUpdateSingleSchedule";
 import { useDeleteSingleSchedule } from "@/services/useDeleteSingleSchedule";
+import ScheduleModal from "./ScheduleModal";
+
 export const BigCalendar: React.FC = () => {
 
   
@@ -14,19 +16,26 @@ export const BigCalendar: React.FC = () => {
   
   const { data, isLoading, error } = useSingleScheduleQuery();
   const userId = sessionStorage.getItem("id"); // userId는 sessionStorage에 저장되어 있어야 함
-  
+ 
 
   const { data: petData, error: petError, isLoading: petIsLoading } = usePetQuery(Number(userId));
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<Map<string, string[]>>(new Map());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useRecoilState(scheduleModalState); // ScheduleModal 상태 관리
-
+ // const [isModalOpen, setIsModalOpen] = useRecoilState(scheduleModalState); // ScheduleModal 상태 관리
+ const [isModalOpen, setIsModalOpen] = useRecoilState(singleScheduleModalState);
   const [schedulesForCalendar, setSchedulesForCalendar] = useState<Map<string, string[]>>(new Map());
   const [schedulesForModalWithId, setSchedulesForModalWithId] = useState<Map<string, string[]>>(new Map());
 
   const [schedulesForModal, setSchedulesForModal] = useState<Map<string, string[]>>(new Map());
   const [, setPeriodicModalState] = useRecoilState(periodicModalState); // 로그인 모달 상태
+
+
+
+  const closeScheduleModal = () => {
+    setIsModalOpen({ isModalOpen: false });
+  };
 
 
   const deleteSingleSchedule = useDeleteSingleSchedule();
@@ -44,17 +53,13 @@ export const BigCalendar: React.FC = () => {
     startTime: string;
     endTime: string;
   } | null>(null);
-  
+
 
 
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
 const [selectedPetName, setSelectedPetName] = useState<string | null>(null);
 
 const updateSchedule = useUpdateSingleSchedule();
-
-
-  console.log(data);
-  console.log("petdatas", petData);
 
   const addSchedule = async (scheduleData: {
     petId: number;
@@ -141,25 +146,32 @@ const handleAddSchedule = () => {
     addSchedule(scheduleData);
   };
   const handleEdit = (index: number, schedule: string) => {
-    // 정규식으로 시간과 이름 분리
-    const match = schedule.match(/(\d{2}:\d{2}) ~ (\d{2}:\d{2}) (.+)/);
-  
-    if (!match) {
-      console.error("스케줄 문자열 형식이 잘못되었습니다:", schedule);
-      return;
-    }
-  
-    const [, startTime, endTime, name] = match;
-  
-    setEditingSchedule({
-      index,
-      name,
-      startTime,
-      endTime,
-    });
+    const match = schedule.match(/^\s*(\d{1,2}:\d{2})\s*~\s*(\d{1,2}:\d{2})\s+(.+)$/);
+
+        console.log("Input schedule string:", schedule);
+        console.log("Match result:", match);
+
+        if (!match) {
+          console.error("Invalid schedule format:", schedule);
+          return;
+        }
+
+        const [, startTime, endTime, name] = match;
+
+        console.log("Parsed values:");
+        console.log("Start Time:", startTime);
+        console.log("End Time:", endTime);
+        console.log("Name:", name);
+
+        setEditingSchedule({
+          index,
+          name,
+          startTime,
+          endTime,
+        });
+
   };
   
-
 useEffect(() => {
   if (data) {
     const loadedSchedulesForModal = new Map<string, string[]>();
@@ -347,9 +359,7 @@ const deleteSchedule = (index: number) => {
     setSelectedDate(date);
   };
 
-  const closeScheduleList = () => {
-    setSelectedDate(null); // 스케줄 리스트 모달 닫기
-  };
+
 
   const openScheduleModal = () => {
     setIsModalOpen({ isModalOpen: true }); // 객체로 상태 업데이트
@@ -360,70 +370,124 @@ const deleteSchedule = (index: number) => {
     const match = scheduleText.match(/\(ID: (\d+)\)/);
     return match ? Number(match[1]) : null;
   };
+  const closeScheduleList = () => {
+    setSelectedDate(null); // 모달 닫기
+    setEditingSchedule(null); // editingSchedule 초기화
+  };
   
 
  
   
-  const renderCalendar = () => {
-    const weeks = generateCalendar();
+//   const renderCalendar = () => {
+//     const weeks = generateCalendar();
   
-    return weeks.map((week, index) => (
-      <div key={index} className="flex">
-        {week.map((day, dayIndex) => {
-          const dayNumber = parseInt(day, 10);
-          const isNextMonth = day && dayNumber < 7 && index === weeks.length - 1; // 다음 달
-          const isPreviousMonth = day && index === 0 && dayNumber > 20; // 이전 달
-          const isCurrentMonth = !isPreviousMonth && !isNextMonth; // 현재 달인지 확인
+//     return weeks.map((week, index) => (
+//       <div key={index} className="flex">
+//         {week.map((day, dayIndex) => {
+//           const dayNumber = parseInt(day, 10);
+//           const isNextMonth = day && dayNumber < 7 && index === weeks.length - 1; // 다음 달
+//           const isPreviousMonth = day && index === 0 && dayNumber > 20; // 이전 달
+//           const isCurrentMonth = !isPreviousMonth && !isNextMonth; // 현재 달인지 확인
   
-          // 현재 달일 경우에만 데이터 매칭
-          const formattedDate = isCurrentMonth
-            ? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${day.padStart(2, '0')}`
-            : null;
+//           // 현재 달일 경우에만 데이터 매칭
+//           const formattedDate = isCurrentMonth
+//             ? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${day.padStart(2, '0')}`
+//             : null;
   
-          return (
-            <div
-              key={dayIndex}
-              className={`w-32 h-32 border border-gray-300 flex  items-center relative p-4 ${
-                isNextMonth ? "bg-blue-200 text-gray-500" : isPreviousMonth ? "bg-gray-200" : "bg-white"
-              }`}
-              onClick={() => isCurrentMonth && formattedDate && openScheduleList(formattedDate)}
-            >
-             <div className="relative w-full h-full flex flex-col items-start">
-  <span className="text-sm font-semibold">{day}</span>
-  {isCurrentMonth && formattedDate && schedulesForCalendar.has(formattedDate) ? (
-  <ul className="text-xs mt-1 space-y-1">
-    {/* 일정 하나만 표시 */}
-    {schedulesForCalendar.get(formattedDate)!.slice(0, 2).map((schedule, idx) => (
-      <li
-        key={idx}
-        style={{ color: "#5CA157" }}
-      >
-        {schedule.length > 6 ? `${schedule.slice(0, 6)}...` : schedule}
-      </li>
-    ))}
-    {/* 일정이 2개 이상일 때 더보기 표시 */}
-    {schedulesForCalendar.get(formattedDate)!.length > 2 && (
-      <li
-        className="text-blue-500 cursor-pointer"
-        onClick={() => openScheduleList(formattedDate)}
-      >
-        더보기...
-      </li>
-    )}
-  </ul>
-) : (
-  <span className="text-xs mt-1">일정 없음</span>
-)}
+//           return (
+//             <div
+//               key={dayIndex}
+//               className={`w-32 h-32 border border-gray-300 flex  items-center relative p-4 ${
+//                 isNextMonth ? "bg-blue-200 text-gray-500" : isPreviousMonth ? "bg-gray-200" : "bg-white"
+//               }`}
+//               onClick={() => isCurrentMonth && formattedDate && openScheduleList(formattedDate)}
+//             >
+//              <div className="relative w-full h-full flex flex-col items-start">
+//   <span className="text-sm font-semibold">{day}</span>
+//   {isCurrentMonth && formattedDate && schedulesForCalendar.has(formattedDate) ? (
+//   <ul className="text-xs mt-1 space-y-1">
+//     {/* 일정 하나만 표시 */}
+//     {schedulesForCalendar.get(formattedDate)!.slice(0, 2).map((schedule, idx) => (
+//       <li
+//         key={idx}
+//         style={{ color: "#5CA157" }}
+//       >
+//         {schedule.length > 6 ? `${schedule.slice(0, 6)}...` : schedule}
+//       </li>
+//     ))}
+//     {/* 일정이 2개 이상일 때 더보기 표시 */}
+//     {schedulesForCalendar.get(formattedDate)!.length > 2 && (
+//       <li
+//         className="text-blue-500 cursor-pointer"
+//         onClick={() => openScheduleList(formattedDate)}
+//       >
+//         더보기...
+//       </li>
+//     )}
+//   </ul>
+// ) : (
+//   <span className="text-xs mt-1">일정 없음</span>
+// )}
 
-</div>
+// </div>
 
+//             </div>
+//           );
+//         })}
+//       </div>
+//     ));
+//   };
+  
+const renderCalendar = () => {
+  const weeks = generateCalendar();
+
+  return weeks.map((week, index) => (
+    <div key={index} className="flex">
+      {week.map((day, dayIndex) => {
+        const dayNumber = parseInt(day, 10);
+        const isNextMonth = day && dayNumber < 7 && index === weeks.length - 1;
+        const isPreviousMonth = day && index === 0 && dayNumber > 20;
+        const isCurrentMonth = !isPreviousMonth && !isNextMonth;
+
+        const formattedDate = isCurrentMonth
+          ? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${day.padStart(2, "0")}`
+          : null;
+
+        return (
+          <div
+            key={dayIndex}
+            className={`w-32 h-32 border border-gray-300 flex items-center relative p-4 ${
+              isNextMonth ? "bg-blue-200 text-gray-500" : isPreviousMonth ? "bg-gray-200" : "bg-white"
+            }`}
+            onClick={() => isCurrentMonth && formattedDate && openScheduleList(formattedDate)}
+          >
+            <div className="relative w-full h-full flex flex-col items-start">
+              <span className="text-sm font-semibold">{day}</span>
+              {isCurrentMonth && formattedDate && schedulesForCalendar.has(formattedDate) ? (
+                <ul className="text-xs mt-1 space-y-1">
+                  {schedulesForCalendar.get(formattedDate)!.slice(0, 2).map((schedule, idx) => (
+                    <li key={idx} style={{ color: "#5CA157" }}>
+                      {schedule.length > 6 ? `${schedule.slice(0, 6)}...` : schedule}
+                    </li>
+                  ))}
+                  {schedulesForCalendar.get(formattedDate)!.length > 2 && (
+                    <li className="text-blue-500 cursor-pointer" onClick={() => openScheduleList(formattedDate)}>
+                      더보기...
+                    </li>
+                  )}
+                </ul>
+              ) : (
+                <span className="text-xs mt-1">일정 없음</span>
+              )}
             </div>
-          );
-        })}
-      </div>
-    ));
-  };
-  
+          </div>
+        );
+      })}
+    </div>
+  ));
+};
+
+
 
   return (
     <div className="p-6">
@@ -463,220 +527,23 @@ const deleteSchedule = (index: number) => {
 
       {/* Schedule List */}
       {selectedDate && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center" onClick={closeScheduleList}>
-          <div className="bg-white p-6 rounded-md w-1/3" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-semibold mb-4">{selectedDate} 일정</h3>
-            <div className="mb-4">
-            <ul>
-              {schedulesForModal.get(selectedDate)?.map((schedule, index) => (
-                <li key={index} className="flex justify-between items-start gap- w-full">
-                  {/* 수정 상태 확인 */}
-                  {editingSchedule && editingSchedule.index === index ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSaveEdit(index);
-                      }}
-                      className="space-y-2 w-full"
-                    >
-                      <input
-                        type="text"
-                        value={editingSchedule.name} // 수정된 스케줄 이름 표시
-                        onChange={(e) =>
-                          setEditingSchedule((prev) => ({
-                            ...prev!,
-                            name: e.target.value,
-                          }))
-                        }
-                        className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                      />
-                      <div className="flex gap-2">
-                        <select
-                          value={editingSchedule.startTime.split(":")[0]}
-                          onChange={(e) =>
-                            setEditingSchedule((prev) => ({
-                              ...prev!,
-                              startTime: `${e.target.value}:${editingSchedule.startTime.split(":")[1]}`,
-                            }))
-                          }
-                          className="border border-gray-300 rounded-md px-2 py-1"
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={String(i).padStart(2, "0")}>
-                              {String(i).padStart(2, "0")}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={editingSchedule.startTime.split(":")[1]}
-                          onChange={(e) =>
-                            setEditingSchedule((prev) => ({
-                              ...prev!,
-                              startTime: `${editingSchedule.startTime.split(":")[0]}:${e.target.value}`,
-                            }))
-                          }
-                          className="border border-gray-300 rounded-md px-2 py-1"
-                        >
-                          {Array.from({ length: 60 }, (_, i) => (
-                            <option key={i} value={String(i).padStart(2, "0")}>
-                              {String(i).padStart(2, "0")}
-                            </option>
-                          ))}
-                        </select>
 
-                        <span>~</span>
-
-                        <select
-                          value={editingSchedule.endTime.split(":")[0]}
-                          onChange={(e) =>
-                            setEditingSchedule((prev) => ({
-                              ...prev!,
-                              endTime: `${e.target.value}:${editingSchedule.endTime.split(":")[1]}`,
-                            }))
-                          }
-                          className="border border-gray-300 rounded-md px-2 py-1"
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={String(i).padStart(2, "0")}>
-                              {String(i).padStart(2, "0")}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={editingSchedule.endTime.split(":")[1]}
-                          onChange={(e) =>
-                            setEditingSchedule((prev) => ({
-                              ...prev!,
-                              endTime: `${editingSchedule.endTime.split(":")[0]}:${e.target.value}`,
-                            }))
-                          }
-                          className="border border-gray-300 rounded-md px-2 py-1"
-                        >
-                          {Array.from({ length: 60 }, (_, i) => (
-                            <option key={i} value={String(i).padStart(2, "0")}>
-                              {String(i).padStart(2, "0")}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          className="bg-green-500 text-white px-4 py-2 rounded-md"
-                        >
-                          저장
-                        </button>
-                        <button
-                          onClick={() => deleteSchedule(schedule)}
-                          className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
-                        >
-                          취소
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="flex justify-between w-full">
-                      <span
-                        style={{
-                          whiteSpace: "normal", // 텍스트가 길면 줄바꿈
-                          wordBreak: "break-word", // 단어가 길 경우 줄바꿈
-                          maxWidth: "70%", // 버튼 영역과 충돌하지 않도록 너비 제한
-                          overflowWrap: "break-word", // 길이가 길 경우 자동 줄바꿈
-                        }}
-                      >
-                        {schedule}
-                        
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => deleteSchedule(index, schedule)}
-                          className="text-red-500 px-2 py-1 rounded hover:bg-transparent"
-                        >
-                          삭제
-                        </button>
-                        <button
-                          onClick={() => handleEdit(index, schedule)}
-                          className="text-blue-500 px-2 py-1 rounded hover:bg-transparent"
-                        >
-                          수정
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
+        <ScheduleModal
+        selectedDate={selectedDate}
+        schedulesForModal={schedulesForModal}
+        editingSchedule={editingSchedule}
+        setEditingSchedule={setEditingSchedule}
+        handleSaveEdit={handleSaveEdit}
+        deleteSchedule={deleteSchedule}
+        handleAddSchedule={handleAddSchedule}
+        closeScheduleList={closeScheduleList}
+        handleEdit={handleEdit} // 'handleEdit' 전달
+        petData={petData}
+        setSelectedPetId={setSelectedPetId}
+        setSelectedPetName={setSelectedPetName}
+        />
 
 
-            </div>
-            <div className="flex flex-col gap-4">
-              <input
-                type="text"
-                placeholder="스케줄 이름"
-                className="bg-transparent border-none border-b-2 border-green-500 focus:outline-none focus:border-green-700"
-              />
-              <div className="flex gap-1 items-center">
-                {/* 시작 시간 선택 */}
-                <select className="appearance-none start-hour bg-transparent border-none border-b-2 border-green-500 focus:outline-none focus:border-green-700 text-center">
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option value={i}>{i < 10 ? `0${i}` : i}</option>
-                  ))}
-                </select>
-                <span>:</span>
-                {/* 시작 분 선택 */}
-                <select className="appearance-none start-minute bg-transparent border-none border-b-2 border-green-500 focus:outline-none focus:border-green-700 text-center">
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <option value={i}>{i < 10 ? `0${i}` : i}</option>
-                  ))}
-                </select>
-                <span>부터</span>
-                {/* 종료 시간 선택 */}
-                <select className="appearance-none end-hour bg-transparent border-none border-b-2 border-green-500 focus:outline-none focus:border-green-700 text-center">
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option value={i}>{i < 10 ? `0${i}` : i}</option>
-                  ))}
-                </select>
-                <span>:</span>
-                {/* 종료 분 선택 */}
-                <select className="appearance-none end-minute bg-transparent border-none border-b-2 border-green-500 focus:outline-none focus:border-green-700 text-center">
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <option value={i}>{i < 10 ? `0${i}` : i}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="relative">
-                <select
-                  className="appearance-none bg-white border border-green-500 text-green-700 rounded-md w-full py-2 px-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-700"
-                  defaultValue="" // 기본값 설정
-                  onChange={(e) => {
-                    const selectedPet = petData?.data.find((pet) => pet.name === e.target.value);
-                    setSelectedPetId(selectedPet?.id || null);
-                    setSelectedPetName(selectedPet?.name || null);
-                    console.log(`Selected pet: ID = ${selectedPet?.id}, Name = ${selectedPet?.name}`);
-                  }}
-                >
-                  <option value="" disabled>
-                    펫 선택
-                  </option>
-                  {petData && petData.data && petData.data.length > 0 ? (
-                    petData.data.map((pet) => (
-                      <option key={pet.id} value={pet.name}>
-                        {pet.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>펫 데이터가 없습니다</option>
-                  )}
-                </select>
-              </div>
-
-
-              <button onClick={handleAddSchedule} className="px-4 py-2 bg-[#5CA157] text-white rounded-md">
-                스케줄 추가
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
 

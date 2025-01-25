@@ -21,8 +21,7 @@ export const PetModal = () => {
   useEffect(() => {
     axios.get("http://localhost:8080/api/species")
       .then((response) => {
-        console.log("Species Data:", response.data); // 데이터 확인
-        console.log("123334",response.data.data);
+    
         setSpeciesList(response.data.data); // 종 데이터 상태 업데이트
       })
       .catch((error) => {
@@ -35,7 +34,7 @@ export const PetModal = () => {
     if (selectedSpecies) {
       axios.get(`http://localhost:8080/api/breeds/${selectedSpecies}`)
         .then((response) => {
-          console.log("Breed Data:", response.data); // 데이터 확인
+  
           setBreedList(response.data.data); // 품종 데이터 상태 업데이트
         })
         .catch((error) => {

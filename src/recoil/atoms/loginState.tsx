@@ -35,6 +35,14 @@ export const scheduleModalState = atom<LoginModalState>({
   default: { isModalOpen: false }
 });
 
+
+
+export const singleScheduleModalState = atom({
+  key: "singleScheduleModalState",
+  default: { isModalOpen: false }, // 초기 상태
+});
+
+
 export const loginState = atom<LoginState>({
   key: 'loginState',
   default: {
@@ -49,18 +57,35 @@ export const loginModalState = atom<LoginModalState>({
   },
 });
 
+// const tokenBaseAtom = atom({
+//   key: 'tokenBaseAtom',
+//   default: sessionStorage.getItem(CONFIG.TOKEN_KEY)
+//     ? JSON.parse(sessionStorage.getItem(CONFIG.TOKEN_KEY) as string)
+//     : null,
+//   effects_UNSTABLE: [
+//     ({ onSet }) => {
+//       onSet((newValue) => {
+//         if (newValue === null) {
+//           sessionStorage.removeItem(CONFIG.TOKEN_KEY);
+//         } else {
+//           sessionStorage.setItem(CONFIG.TOKEN_KEY, JSON.stringify(newValue));
+//         }
+//       });
+//     },
+//   ],
+// });
+
+
 const tokenBaseAtom = atom({
   key: 'tokenBaseAtom',
-  default: sessionStorage.getItem(CONFIG.TOKEN_KEY)
-    ? JSON.parse(sessionStorage.getItem(CONFIG.TOKEN_KEY) as string)
-    : null,
+  default: sessionStorage.getItem(CONFIG.TOKEN_KEY) || null,
   effects_UNSTABLE: [
     ({ onSet }) => {
       onSet((newValue) => {
         if (newValue === null) {
           sessionStorage.removeItem(CONFIG.TOKEN_KEY);
         } else {
-          sessionStorage.setItem(CONFIG.TOKEN_KEY, JSON.stringify(newValue));
+          sessionStorage.setItem(CONFIG.TOKEN_KEY, newValue as string); // JSON.stringify 제거
         }
       });
     },

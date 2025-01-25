@@ -24,7 +24,9 @@ const HomePage: React.FC = () => {
   const { data: petData } = usePetQuery(Number(userId));
 
   // 일정 데이터 가져오기
-  const { data: scheduleData } = useSingleScheduleQuery();
+
+  const { data: scheduleData} = useSingleScheduleQuery();
+    console.log("sca", scheduleData);
 
   const handleSearch = (inputGu: string, inputDong: string) => {
     setGu(inputGu); // 입력된 구 값을 업데이트
@@ -44,6 +46,8 @@ const HomePage: React.FC = () => {
       const [year, month] = date.split('-');
       return parseInt(year) === currentYear && parseInt(month) === currentMonth;
     }) || [];
+
+    console.log("scsss", scheduleDates);
 
   // 오늘 일정 확인
   const todaySchedules = scheduleData?.filter((schedule: any) => {
@@ -94,7 +98,11 @@ const HomePage: React.FC = () => {
                 ? todaySchedules.map((schedule) => schedule.name).join(", ") 
                 : "오늘은 일정이 없습니다."
             }
-            scheduleDates={scheduleDates} // 스케줄 날짜 전달
+            scheduleDates={scheduleDates}
+            scheduleData={scheduleData?.map((schedule: any) => ({
+              date: schedule.startDatetime.split('T')[0],
+              name: schedule.name,
+            }))}
           />
         </div>
       )}

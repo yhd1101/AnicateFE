@@ -12,6 +12,10 @@ import Hospital from './pages/Hospital.tsx';
 import CommunityUpdate from './pages/CommunityUpdate.tsx';
 import ChatList from './pages/ChatList.tsx';
 import ChatRoom from './pages/ChatRoom.tsx';
+import AdminSignup from './pages/adminSignup.tsx';
+import AdminLogin from './pages/AdminLogin.tsx';
+import AdminPage from './pages/AdminPage.tsx';
+import AdminChatList from './pages/AdminChatList.tsx';
 
 type routeElement = {
   path: string;
@@ -62,7 +66,22 @@ const routes: routeElement[] = [
     path:'/chatlist',
     element:<ChatList/>
   },
-
+  {
+    path:'/admin/chatlist',
+    element:<AdminChatList/>
+  },
+  {
+    path:'/admin/signup',
+    element:<AdminSignup/>
+  },
+  {
+    path:'/admin/login',
+    element:<AdminLogin/>
+  },
+  {
+    path:'/admin',
+    element:<AdminPage/>
+  },
   {
     path: '/chatroom/:roomId',
     element: <ChatRoom />
