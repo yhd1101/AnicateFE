@@ -22,6 +22,13 @@ const Information: React.FC = () => {
     setCurrentPage(1); // 검색 시 페이지를 1로 초기화
   };
 
+  const role = sessionStorage.getItem("role");
+
+  const handleAdd = () => {
+    navigate("/information/new");
+  }
+
+
   const posts = data?.data || [];
   const meta = data?.meta;
 
@@ -35,10 +42,22 @@ const Information: React.FC = () => {
         <h1 className="text-3xl font-bold text-[#5CA157] text-center mt-6 mb-5 font-ysabeau">
           반려동물 정보
         </h1>
-        <div className="w-full">
+        {role === "ADMIN" && (
+          <div className="flex flex-col items-end w-full max-w-2xl">
+            <div className=" flex">
+              <button
+                className="p-2 bg-[#5CA157] text-white font-bold mb-4 rounded-md hover:bg-[#4A8B42] transition"
+                onClick={handleAdd}
+              >
+                정보등록
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="w-full ">
           <InformationSearch onSearch={handleSearch} />
         </div>
-        <div className="flex flex-col items-end gap-6 w-full max-w-2xl mt-8">
+        <div className="flex flex-col items-end gap-6 w-full max-w-2xl mt-8 min-h-[800px]">
           {posts.length > 0 ? (
             posts.map((post) => (
               <div

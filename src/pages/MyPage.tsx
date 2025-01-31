@@ -13,15 +13,21 @@ import { useDeleteUser } from "@/services/useDeleteUser";
 import { useDeletePet } from "@/services/useDeletePet";
 import { PetUpdateModal } from "@/components/Pet/PetUpdateModal";
 import Calendar from "@/components/Calendar";
+import { useSingleScheduleQuery } from "@/services/useScheduleData";
 
 const Mypage: React.FC = () => {
     const queryClient = useQueryClient(); // queryClient 가져오기
   const userId = sessionStorage.getItem("id"); // userId는 sessionStorage에 저장되어 있어야 함
   const { data: userData, error: userError, isLoading: userIsLoading } = useUserQuery(Number(userId));
+  console.log("suier", userData);
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+  const todayFormatted = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
 
   const token = sessionStorage.getItem("token"); // 토큰 가져오기
   const [isSmallScreen, setIsSmallScreen] = useState(false); // 화면 크기 상태
-
+  const { data: scheduleData} = useSingleScheduleQuery();
   const [name, setName] = useState(""); // 이름 상태
   const [experience, setExperience] = useState(0); // 경험 상태
   const [isEditing, setIsEditing] = useState(false); // 수정 모드 상태
@@ -146,6 +152,11 @@ const Mypage: React.FC = () => {
   // 스크롤 컨테이너 및 버튼 관리
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const todaySchedules = scheduleData?.filter((schedule: any) => {
+    const scheduleDate = schedule.startDatetime.split('T')[0];
+    return scheduleDate === todayFormatted;
+  }) || [];
+
   // 스크롤 이동 함수
   const handleScrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -159,6 +170,12 @@ const Mypage: React.FC = () => {
     }
   };
 
+  const scheduleDates = scheduleData
+  ?.map((schedule: any) => schedule.startDatetime.split('T')[0])
+  .filter((date: string) => {
+    const [year, month] = date.split('-');
+    return parseInt(year) === currentYear && parseInt(month) === currentMonth;
+  }) || [];
   return (
     <>
       <Header />
@@ -334,20 +351,10 @@ const Mypage: React.FC = () => {
         </div>
 
         <PetModal />
-        <PetUpdateModal/>
-        <div className="flex flex-col items-start gap-6 w-full max-w-4xl mt-8 px-4">
-          <div className="mt-4 flex">
-            <h3 className="text-[#5CA157] font-bold text-2xl">스케줄 관리</h3>
-          </div>
-          </div>
-          {isSmallScreen ? (
-          <Calendar
-            reminderMessage="작은 화면에서는 이 캘린더가 사용됩니다."
-            scheduleDates={["2025-01-20", "2025-01-21", "2025-01-22"]}
-          />
-        ) : (
+        {/* <PetUpdateModal/> */}
+        
           <BigCalendar />
-        )}
+  
        
       </div>
     </>

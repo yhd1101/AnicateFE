@@ -16,6 +16,8 @@ import AdminSignup from './pages/adminSignup.tsx';
 import AdminLogin from './pages/AdminLogin.tsx';
 import AdminPage from './pages/AdminPage.tsx';
 import AdminChatList from './pages/AdminChatList.tsx';
+import ChatRoomPost from './pages/ChatRoomPost.tsx';
+import InformationPost from './pages/InformationPost.tsx';
 
 type routeElement = {
   path: string;
@@ -85,6 +87,14 @@ const routes: routeElement[] = [
   {
     path: '/chatroom/:roomId',
     element: <ChatRoom />
+  },  
+  {
+    path: '/chatroompost',
+    element: <ChatRoomPost />
+  },  
+  {
+    path: '/information/new',
+    element: <InformationPost />
   },  
   {
     path: '/api/auth/kakao/callback',

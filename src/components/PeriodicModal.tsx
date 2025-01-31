@@ -141,8 +141,8 @@ export const PeriodicModal = () => {
         overlay: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
         content: {
           backgroundColor: "#F6F8F1",
-          width: "40%",
-          height: "95%",
+          width: "450px",  // 🔥 고정된 넓이
+          height: "600px", // 🔥 고정된 높이
           margin: "auto",
           padding: "20px",
           borderRadius: "10px",

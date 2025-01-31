@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import axios from "axios";
@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 
 const ChatRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
   const userId = sessionStorage.getItem("id")
     ? parseInt(sessionStorage.getItem("id")!, 10)
     : null;
@@ -14,6 +15,8 @@ const ChatRoom: React.FC = () => {
   const [messages, setMessages] = useState<
     { senderName: string; content: string; timestamp: string; sender: number }[]
   >([]);
+
+  console.log("mses", messages);
   const [newMessage, setNewMessage] = useState("");
   const [isAtBottom, setIsAtBottom] = useState(true); // 스크롤 상태 관리
   const stompClientRef = useRef<Client | null>(null);
@@ -140,37 +143,65 @@ const ChatRoom: React.FC = () => {
   return (
     <div className="bg-white h-screen flex flex-col">
       <Header />
-      <h1 className="text-2xl font-bold text-[#5CA157] text-center mt-4 mb-6">
-        Chat Room: {roomId}
-      </h1>
-      <div
-        ref={messageContainerRef}
-        className="flex-1 overflow-y-auto px-4"
-        onScroll={handleScroll}
-      >
-        {messages.map((message, index) => {
-          const isMyMessage = message.sender === userId;
+      <div className="flex justify-between items-center px-4 py-2 bg-white">
+  {/* 🔙 뒤로가기 버튼 */}
+  <button
+    onClick={() => navigate("/chatlist")}
+    className="text-white text-2xl font-bold bg-[#D8E6BE] px-3 py-1 rounded-md"
+  >
+    ←
+  </button>
 
-          return (
-            <div
-              key={index}
-              className={`flex gap-3 ${
-                isMyMessage ? "justify-end" : "justify-start"
-              } mb-4`}
-            >
-              <div
-                className={`p-4 rounded-lg ${
-                  isMyMessage ? "bg-[#F9F7DE]" : "bg-[#F6F8F1]"
-                } max-w-[70%]`}
-              >
-                <p className="text-sm font-bold">{message.senderName}</p>
-                <p>{message.content}</p>
-                <small className="text-gray-400 text-xs">{message.timestamp}</small>
-              </div>
-            </div>
-          );
-        })}
+  {/* 채팅방 제목 */}
+  <h1 className="text-2xl font-bold text-[#5CA157]">채팅하기</h1>
+
+  {/* 🚪 나가기 버튼 */}
+  <button
+    className="bg-[#D8E6BE] px-4 py-2 rounded-md font-bold text-white"
+  >
+    나가기
+  </button>
+</div>
+
+      <div
+  ref={messageContainerRef}
+  className="flex-1 overflow-y-auto px-4"
+  onScroll={handleScroll}
+>
+  {messages.map((message, index) => {
+    const isMyMessage = message.sender === userId;
+
+    // ✅ SYSTEM 메시지일 경우 (중앙 정렬, 말풍선 X)
+    if (message.senderName === "SYSTEM") {
+      return (
+        <div key={index} className="text-center text-gray-500 text-sm my-2">
+          {message.content}
+        </div>
+      );
+    }
+
+    // ✅ 일반 메시지 (사용자 대화)
+    return (
+      <div
+        key={index}
+        className={`flex gap-3 ${
+          isMyMessage ? "justify-end" : "justify-start"
+        } mb-4`}
+      >
+        <div
+          className={`p-4 rounded-lg ${
+            isMyMessage ? "bg-[#F9F7DE]" : "bg-[#F6F8F1]"
+          } max-w-[70%]`}
+        >
+          <p className="text-sm font-bold">{message.senderName}</p>
+          <p>{message.content}</p>
+          <small className="text-gray-400 text-xs">{message.timestamp}</small>
+        </div>
       </div>
+    );
+  })}
+</div>
+
       <div className="bg-[#D8E6BE] w-full py-4 px-4 flex items-center">
         <input
           type="text"

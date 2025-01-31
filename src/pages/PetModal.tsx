@@ -161,8 +161,8 @@ export const PetModal = () => {
         overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
         content: {
           backgroundColor: '#F6F8F1',
-          width: '40%',
-          height: '97%',
+          width: '400px',
+          height: '700px',
           margin: 'auto',
           padding: '20px',
           borderRadius: '10px',

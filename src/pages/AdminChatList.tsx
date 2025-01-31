@@ -17,6 +17,7 @@ const AdminChatList: React.FC = () => {
   if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>;
 
   const rooms = chatRooms?.data?.data || []; // 채팅방 배열
+  console.log("rss", rooms);
   const meta = chatRooms?.data?.meta; // 페이지네이션 정보
 
   return (

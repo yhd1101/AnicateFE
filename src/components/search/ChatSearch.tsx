@@ -39,8 +39,8 @@ const ChatSearch: React.FC<CommunitySearchSectionProps> = ({ onSearch }) => {
 
   return (
     <section className="bg-[#D8E6BE] flex flex-col items-center py-8">
-      <div className="bg-white shadow-md rounded-3xl p-6 w-full max-w-4xl">
-        <div className="grid grid-cols-[1fr_4fr_1fr] gap-4 items-center">
+      <div className="bg-white shadow-md rounded-3xl p-6 w-full max-w-3xl">
+        <div className="grid grid-cols-[6fr_1fr] gap-4 items-center">
           <input
             type="text"
             placeholder="검색어를 입력해주세요"

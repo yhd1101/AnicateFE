@@ -63,13 +63,17 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   };
   
   return (
-    <div
-      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center"
-      onClick={closeScheduleList}
-    >
-      <div className="bg-white p-6 rounded-md w-1/3" onClick={(e) => e.stopPropagation()}>
+   <div
+  className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center"
+  onClick={closeScheduleList}
+>
+  <div
+    className="bg-white p-6 rounded-md w-[400px] h-[400px] overflow-auto"
+    onClick={(e) => e.stopPropagation()}
+  >
+
         <h3 className="text-xl font-semibold mb-4">{selectedDate} 일정</h3>
-        <div className="mb-4">
+        <div className="mb-4 max-h-[95px] overflow-y-auto">
           <ul>
             {schedulesForModal.get(selectedDate || "")?.map((schedule, index) => (
               <li key={index} className="flex justify-between items-start gap-2">
