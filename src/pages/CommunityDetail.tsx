@@ -9,6 +9,9 @@ import LikeButton from "@/components/Button/LikeButton";
 import { useLikeMutation } from "@/services/useLikeMutation";
 import { useLikeDeleteMutation } from "@/services/useLikeDeleteMutation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDeleteCommunityPostMutation } from "@/services/useDeleteCommunityPostMutation";
+import { useUpdateCommentMutation } from "@/services/useCommunityUpdate";
+import { useDeleteCommentMutation } from "./useCommentDelete";
 
 const CommunityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
@@ -18,9 +21,32 @@ const CommunityDetail: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null); // userId 상태
   const queryClient = useQueryClient();
 
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+const [editedContent, setEditedContent] = useState<string>("");
+
+const handleEditComment = (commentId: number, content: string) => {
+  setEditingCommentId(commentId);
+  setEditedContent(content);
+};
+
+// 댓글 수정 취소
+const handleCancelEdit = () => {
+  setEditingCommentId(null);
+  setEditedContent("");
+};
+
   const { mutate: likePost } = useLikeMutation();
   const { mutate: likeDelete} = useLikeDeleteMutation();
+
+  const { mutate: deletePost} = useDeleteCommunityPostMutation();
   const navigate = useNavigate();
+
+  const handleDelete = (postingId: number) => {
+    if (window.confirm("정말 삭제하시겠습니까?")) {
+      deletePost(postingId);
+      navigate("/community")
+    }
+  };
 
   // 페이지 로드 시 userId 가져오기 (sessionStorage에서 불러오기)
   useEffect(() => {
@@ -33,6 +59,34 @@ const CommunityDetail: React.FC = () => {
 
   // API로부터 데이터 불러오기
   const { data, isLoading, isError, error } = useFetchCommunityDetail(id!);
+  console.log("sda", data);
+
+  const { mutate: updateComment } = useUpdateCommentMutation(id!);
+
+  const { mutate: deleteComment } = useDeleteCommentMutation(id!)
+
+  const handleDeleteComment = (commentId: number) => {
+    if (window.confirm("정말 삭제하시겠습니까?")) {
+      deleteComment(commentId);
+      queryClient.invalidateQueries(["communityDetail", id]);
+    }
+  };
+
+  const handleUpdateComment = (commentId: number) => {
+    updateComment(
+      { commentId, content: editedContent },
+      {
+        onSuccess: (updatedComment) => {
+          alert("댓글이 수정되었습니다.");
+          setEditingCommentId(null); // 수정 모드 종료
+  
+          // ✅ 강제로 데이터 다시 불러오기 (필요한 경우)
+          queryClient.invalidateQueries(["communityDetail", id]);
+        },
+      }
+    );
+  };
+  
 
   console.log(data);
 
@@ -47,57 +101,7 @@ const CommunityDetail: React.FC = () => {
     setAnimalSpecies(e.target.value);
   };
 
-  // 댓글 제출 처리
-  // const handleCommentSubmit = async () => {
-  //   if (!comment) {
-  //     alert("댓글을 입력해주세요.");
-  //     return;
-  //   }
-
-  //   // 세션에서 토큰 가져오기
-  //   const token = sessionStorage.getItem("token");
-
-  //   if (!token) {
-  //     alert("로그인이 필요합니다.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const sanitizedToken = token.replace(/"/g, ""); // 토큰에서 따옴표 제거
-
-  //     // 댓글 생성 API 호출 (id를 communityId로 사용)
-  //     const response = await axios.post(
-  //       `http://localhost:8080/api/comments/${id}`, // communityId를 URL에 넣음
-  //       { content: comment }, // 댓글 내용
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${sanitizedToken}`, // Authorization 헤더에 토큰 추가
-  //         },
-  //       }
-  //     );
-  //     alert("댓글이 등록되었습니다!");
-  //     const newComment = response.data;
-  //     queryClient.setQueryData(["communityDetail", id], (oldData: any) => {
-  //       if (oldData) {
-  //         return {
-  //           ...oldData,
-  //           data: {
-  //             ...oldData.data,
-  //             comment: [...oldData.data.comment, newComment], // 새로운 댓글 추가
-  //           },
-  //         };
-  //       }
-  //       return oldData;
-  //     });
-
-  //     // 댓글 등록 후 처리 (예: 댓글 리스트 갱신 등)
-  //     console.log("댓글 등록 성공:", response.data);
-  //     setComment(""); // 댓글 입력 초기화
-  //   } catch (error) {
-  //     console.error("댓글 등록 실패:", error);
-  //     alert("댓글 등록에 실패했습니다.");
-  //   }
-  // };
+ 
 
   const handleCommentSubmit = async () => {
     if (!comment.trim()) {
@@ -175,20 +179,7 @@ const CommunityDetail: React.FC = () => {
     // 수정 로직 작성
   };
 
-  const handleDeleteCommunity = () => {
-    console.log(`게시글 ${id} 삭제`);
-    // 삭제 로직 작성
-  };
 
-  const handleEditComment = (commentId: number) => {
-    console.log(`댓글 ${commentId} 수정`);
-    // 수정 로직 작성
-  };
-
-  const handleDeleteComment = (commentId: number) => {
-    console.log(`댓글 ${commentId} 삭제`);
-    // 삭제 로직 작성
-  };
 
   // if (isLoading) return <div>로딩 중...</div>; // 로딩 상태일 때
   // if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>; // 에러 발생시
@@ -325,7 +316,7 @@ const CommunityDetail: React.FC = () => {
                   수정
                 </button>
                 <button
-                  onClick={handleDeleteCommunity}
+                  onClick={() => handleDelete(community.id)}
                   className="text-red-500 hover:text-red-700"
                 >
                   삭제
@@ -355,46 +346,80 @@ const CommunityDetail: React.FC = () => {
         </div>
 
         {/* 댓글 리스트 */}
-      {comments?.length > 0 &&
-        comments.map((comment) => (
-          <div key={comment.id} className="mt-6 w-full">
-            <div className="flex items-center text-xs text-gray-500 mt-2">
-              <div className="flex items-center space-x-2">
-                {comment?.profileImg && (
-                  <img
-                    src={comment.profileImg}
-                    alt="프로필 이미지"
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                )}
-                {comment?.name && <p className="text-sm text-gray-700">{comment.name}</p>}
+        {comments?.length > 0 &&
+          comments.map((comment) => (
+            <div key={comment.id} className="mt-6 w-full">
+              <div className="flex items-center text-xs text-gray-500 mt-2">
+                <div className="flex items-center space-x-2">
+                  {comment?.profileImg && (
+                    <img
+                      src={comment.profileImg}
+                      alt="프로필 이미지"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  )}
+                  {comment?.name && <p className="text-sm text-gray-700">{comment.name}</p>}
+                </div>
+
+                <div className="ml-auto flex items-center space-x-2">
+                  <span>{comment?.createdAt?.split("T")[0]}</span>
+                  {userId && comment.userId === Number(userId) && (
+                    <>
+                      {editingCommentId === comment.id ? (
+                        <>
+                          <span
+                            onClick={handleCancelEdit}
+                            className="cursor-pointer text-gray-500 hover:text-gray-700"
+                          >
+                            취소
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span
+                            onClick={() => handleEditComment(comment.id, comment.content)}
+                            className="cursor-pointer hover:text-gray-700"
+                          >
+                            수정
+                          </span>
+                          <span
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="cursor-pointer hover:text-red-500"
+                          >
+                            삭제
+                          </span>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div className="ml-auto flex items-center space-x-2">
-                <span>{comment?.createdAt?.split("T")[0]}</span>
-                {userId && comment.userId === Number(userId) && (
+              {/* ✅ 수정 모드일 때 input 표시 */}
+              <div className="flex items-center mt-2">
+                {editingCommentId === comment.id ? (
                   <>
-                    <span
-                      onClick={() => handleEditComment(comment.id)}
-                      className="cursor-pointer hover:text-gray-700"
+                    <input
+                      type="text"
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      className="flex-1 p-2 border border-gray-300 rounded-md"
+                    />
+                    <button
+                       onClick={() => handleUpdateComment(comment.id)}
+                      className="ml-2 px-3 py-1 bg-[#5CA157] text-white rounded-md hover:bg-[#4A8B42]"
                     >
-                      수정
-                    </span>
-                    <span
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="cursor-pointer hover:text-red-500"
-                    >
-                      삭제
-                    </span>
+                      수정하기
+                    </button>
                   </>
+                ) : (
+                  <p className="text-sm text-gray-800">{comment?.content}</p>
                 )}
               </div>
-            </div>
 
-            <p className="text-sm text-gray-800 mt-2">{comment?.content}</p>
-            <div className="border-t-2 border-gray-300 mt-4" />
-          </div>
-        ))}
+              <div className="border-t-2 border-gray-300 mt-4" />
+            </div>
+          ))}
 
       </div>
     </div>

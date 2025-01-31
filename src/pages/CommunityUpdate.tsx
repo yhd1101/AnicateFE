@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useFetchCommunityDetail } from "@/services/useFetchCommunityDetail";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CommunityUpdate: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>(); // URL에서 ID를 가져옴
+  const queryClient = useQueryClient(); // ✅ React Query Client 가져오기
+
 
   // ✅ 기존 데이터 불러오기
   const { data, isLoading, isError, error } = useFetchCommunityDetail(id!);
@@ -88,6 +91,7 @@ const CommunityUpdate: React.FC = () => {
       );
       console.log("수정 성공:", response.data);
       alert("글이 성공적으로 수정되었습니다.");
+      queryClient.invalidateQueries(["communityDetail", id]);
       navigate(`/community/${id}`);
     } catch (error: any) {
       console.error("수정 실패:", error.response ? error.response.data : error.message);

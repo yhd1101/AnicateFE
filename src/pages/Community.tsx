@@ -46,7 +46,7 @@ const Community: React.FC = () => {
         <div className="w-full">
           <CommunitySearchSection onSearch={handleSearch} />
         </div>
-        <div className="flex flex-col items-end gap-6 w-full max-w-2xl mt-8">
+        <div className="flex flex-col items-end gap-6 w-full max-w-2xl min-h-[650px] mt-8">
           <div className="mt-4 flex">
             <button
               className="p-1 bg-[#5CA157] text-white font-bold rounded-md hover:bg-[#4A8B42] transition"
