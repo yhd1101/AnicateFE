@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "../Button";
-import axios from "axios";
+import { useFetchAnimalSpecies } from "@/services/useFetchAnimalSpecies";
 
 interface CommunitySearchSectionProps {
-  onSearch: (keyword: string, animalSpecies: string) => void;
+  onSearch: (keyword: string, category: string) => void;
 }
 
 const CommunitySearchSection: React.FC<CommunitySearchSectionProps> = ({ onSearch }) => {
   const [selectedOption, setSelectedOption] = useState("전체");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [animalSpeciesOptions, setAnimalSpeciesOptions] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchAnimalSpecies = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/api/community");
-        const species = response.data.data.data.map((item: any) => item.animalSpecies);
-        const uniqueSpecies = Array.from(new Set(species));
-        setAnimalSpeciesOptions(["전체", ...uniqueSpecies]);
-      } catch (error) {
-        console.error("Error fetching animal species:", error);
-      }
-    };
+  // ✅ React Query로 종 목록 가져오기
+  const { data: speciesList } = useFetchAnimalSpecies();
 
-    fetchAnimalSpecies();
-  }, []);
+  // // ✅ 종 리스트 (API 데이터 사용)
+  // const animalSpeciesOptions = ["전체", ...(speciesList?.data?.animalSpeciesList || [])];
 
   const handleSearchClick = () => {
     onSearch(searchText, selectedOption === "전체" ? "" : selectedOption);
+    
   };
 
   const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
@@ -39,38 +30,22 @@ const CommunitySearchSection: React.FC<CommunitySearchSectionProps> = ({ onSearc
 
   return (
     <section className="bg-[#D8E6BE] flex flex-col items-center py-8">
-      <div className="bg-white shadow-md rounded-3xl p-6 w-full max-w-4xl">
-        <div className="grid grid-cols-[1fr_4fr_1fr] gap-4 items-center">
-          <div className="relative">
-            <button
-              className="p-3 w-full rounded-md bg-[#F6F8F1] text-left focus:outline-none"
-              onClick={toggleDropdown}
-              style={{ border: "none" }}
-            >
-              {selectedOption || "전체"}
-            </button>
-            {isDropdownOpen && (
-              <ul className="absolute left-0 mt-2 w-full bg-[#D8E6BE] rounded-md shadow-md z-10">
-                {animalSpeciesOptions.map((option, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleOptionSelect(option)}
-                    className="px-4 py-2 hover:bg-[#C0D4A8] cursor-pointer text-sm"
-                  >
-                    {option}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <div className="bg-white shadow-md rounded-3xl p-6 w-full max-w-2xl">
+        <div className="grid grid-cols-[8fr_1fr] gap-4 items-center">
+          {/* ✅ 드롭다운 (동물 종 선택) */}
+         
+
+          {/* ✅ 검색 입력창 */}
           <input
             type="text"
-            placeholder="검색어를 입력해주세요"
+            placeholder="제목, 내용을 입력해주세요"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="p-3 rounded-md bg-[#F6F8F1] focus:outline-none focus:ring-2 focus:ring-[#5CA157] w-full"
             style={{ border: "none" }}
           />
+
+          {/* ✅ 검색 버튼 */}
           <Button
             text="검색"
             onClick={handleSearchClick}

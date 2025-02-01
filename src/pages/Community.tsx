@@ -4,21 +4,32 @@ import { useFetchCommunity } from "@/services/useFetchCommunity";
 import CommunitySearchSection from "@/components/search/ CommunitySearchSection";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import { useFetchPosts } from "@/services/useFetchCommunitys";
 
 const Community: React.FC = () => {
   const navigate = useNavigate();
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [keyword, setKeyword] = useState("");
+  // const [animalSpecies, setAnimalSpecies] = useState("");
+  // const [category, setCategory] = useState("");
+
+  // const { data, isLoading, isError, error } = useFetchCommunity(currentPage, keyword, category);
   const [currentPage, setCurrentPage] = useState(1);
+  // const [page, setPage] = useState(1);
+  const [size] = useState(3);
   const [keyword, setKeyword] = useState("");
-  const [animalSpecies, setAnimalSpecies] = useState("");
+  const [category, setCategory] = useState("");
 
-  const { data, isLoading, isError, error } = useFetchCommunity(currentPage, keyword, animalSpecies);
+  // const { data } = useFetchPosts(currentPage, size, keyword, category);
+  const { data, isLoading, isError, error } = useFetchPosts(currentPage, keyword);
 
-  const handleSearch = (searchKeyword: string, searchAnimalSpecies: string) => {
+
+  console.log("dass",data);
+
+
+  const handleSearch = (searchKeyword: string) => {
     setKeyword(searchKeyword);
-    setAnimalSpecies(searchAnimalSpecies);
-    setCurrentPage(1);
   };
-
   const handleWritePost = () => {
     const token = sessionStorage.getItem("token");
 
@@ -33,8 +44,8 @@ const Community: React.FC = () => {
   const posts = data?.data || [];
   const meta = data?.meta;
 
-  if (isLoading) return <div>로딩 중...</div>;
-  if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>;
+  // if (isLoading) return <div>로딩 중...</div>;
+  // if (isError) return <div>에러 발생: {error instanceof Error ? error.message : "알 수 없는 오류"}</div>;
 
   return (
     <>

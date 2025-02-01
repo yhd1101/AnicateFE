@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import ChatSearch from "@/components/search/ChatSearch";
-import { useAdminChatQuery } from "@/services/\buseAdminChat";
+import { useAdminChatQuery } from "@/services/useAdminChat";
 
 
 const AdminChatList: React.FC = () => {

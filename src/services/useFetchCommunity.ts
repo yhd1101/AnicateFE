@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { sortBy } from "lodash";
 
 interface PostData {
   id: number;
@@ -30,19 +29,19 @@ interface FetchCommunityResponse {
 const fetchCommunity = async ({
   pageParam = 1,
   keyword = "",
-  animalSpecies = "",
+  animalSpecies= "",
   sortBy = "",
 }: {
   pageParam: number;
   keyword: string;
-  animalSpecies: string;
+  aniamlSpecies: string; // ✅ category 추가
   sortBy?: string;
 }): Promise<FetchCommunityResponse> => {
   const response = await axios.get("http://localhost:8080/api/community", {
     params: {
       page: pageParam,
       keyword,
-      animalSpecies,
+      animalSpecies, // ✅ 백엔드에서 category 파라미터를 찾을 수 없을 가능성 있음
       sortBy,
     },
   });

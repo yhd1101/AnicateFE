@@ -1,40 +1,24 @@
 import React, { useState, useEffect } from "react";
 import Button from "../Button";
-import axios from "axios";
 
-interface CommunitySearchSectionProps {
-  onSearch: (keyword: string, animalSpecies: string) => void;
+interface ChatSearchProps {
+  onSearch: (keyword: string) => void;
+  keyword: string;
 }
 
-const ChatSearch: React.FC<CommunitySearchSectionProps> = ({ onSearch }) => {
-  const [selectedOption, setSelectedOption] = useState("전체");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [animalSpeciesOptions, setAnimalSpeciesOptions] = useState<string[]>([]);
+const ChatSearch: React.FC<ChatSearchProps> = ({ onSearch, keyword }) => {
+  const [searchText, setSearchText] = useState(keyword);
+  const [isSearching, setIsSearching] = useState(false); // 검색이 실행되었는지 여부
 
   useEffect(() => {
-    const fetchAnimalSpecies = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/api/community");
-        const species = response.data.data.data.map((item: any) => item.animalSpecies);
-        const uniqueSpecies = Array.from(new Set(species));
-        setAnimalSpeciesOptions(["전체", ...uniqueSpecies]);
-      } catch (error) {
-        console.error("Error fetching animal species:", error);
-      }
-    };
-
-    fetchAnimalSpecies();
-  }, []);
+    if (!isSearching) {
+      setSearchText(keyword); // 검색 중이 아닐 때만 keyword 업데이트
+    }
+  }, [keyword]);
 
   const handleSearchClick = () => {
-    onSearch(searchText, selectedOption === "전체" ? "" : selectedOption);
-  };
-
-  const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
-    setIsDropdownOpen(false);
+    onSearch(searchText);
+    setIsSearching(true); // 검색이 실행되었음을 표시
   };
 
   return (
@@ -45,9 +29,15 @@ const ChatSearch: React.FC<CommunitySearchSectionProps> = ({ onSearch }) => {
             type="text"
             placeholder="검색어를 입력해주세요"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              setIsSearching(false); // 검색어 입력 중이면 검색 상태 해제
+            }}
             className="p-3 rounded-md bg-[#F6F8F1] focus:outline-none focus:ring-2 focus:ring-[#5CA157] w-full"
             style={{ border: "none" }}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") handleSearchClick();
+            }}
           />
           <Button
             text="검색"
