@@ -20,13 +20,13 @@ const App = memo(() => (
   <RecoilRoot>
     <QueryClientProvider client={queryClient}>
       <UserProvider>
-        <SearchProvider>
-        <div className="min-h-screen flex flex-col">
-    
-          <RouterProvider router={router} />
+          <SearchProvider>
+          <div className="min-h-screen flex flex-col">
       
-        </div>
-        </SearchProvider>
+            <RouterProvider router={router} />
+        
+          </div>
+          </SearchProvider>
       </UserProvider>
       <Footer />
     </QueryClientProvider>

@@ -60,6 +60,7 @@ const fetchChatRooms = async ({
     },
   });
 
+  console.log("ressd", response.data);
   return response.data; // ✅ data 안에 { data, meta } 포함됨
 };
 

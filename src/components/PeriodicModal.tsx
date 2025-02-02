@@ -7,8 +7,10 @@ import { periodicModalState } from "@/recoil/atoms/loginState";
 import { useAddPeriodicScheduleMutation } from "@/services/useAddPeriodicScheduleMutation";
 import { usePeriodicScheduleQuery } from "@/services/usePeriodicGet";
 import { useDeletePeriodicScheduleMutation } from "@/services/usePeriodicScheduleDelete";
+import { useQueryClient } from "@tanstack/react-query";
 
-export const PeriodicModal = () => {
+export const PeriodicModal = ({petData}) => {
+  const queryClient = useQueryClient();
   const { mutate: addSchedule } = useAddPeriodicScheduleMutation();
   const { mutate: deleteSchedule } = useDeletePeriodicScheduleMutation(); 
   const [isModalOpen, setIsModalOpen] = useRecoilState(periodicModalState);
@@ -24,8 +26,12 @@ export const PeriodicModal = () => {
   const [selectedDay, setSelectedDay] = useState<string>("");
   const [repeatDays, setRepeatDays] = useState<string[]>([]);
 
+
+  const safePetData = petData?.data ?? []; // petData?.data가 없으면 빈 배열 사용
+const [selectedPetId, setSelectedPetId] = useState<number | null>(
+  safePetData.length > 0 ? safePetData[0].id : null // 첫 번째 펫의 ID를 기본값으로 설정
+);
   const { data: periodicSchedules } = usePeriodicScheduleQuery();
-  
   
 
   const handleDeleteSchedule = (scheduleId: number) => {
@@ -66,7 +72,7 @@ export const PeriodicModal = () => {
 
     // 스케줄 생성 페이로드
     const schedulePayload = {
-        petId: 3,
+        petId: selectedPetId,
         name: scheduleInput,
         startDate: startDate ? formatDateToLocalString(startDate) : "",
         endDate: endDate ? formatDateToLocalString(endDate) : "",
@@ -83,8 +89,8 @@ export const PeriodicModal = () => {
 
      // 콘솔에 입력 데이터 출력
     console.log("스케쥴 생성 요청 데이터:", schedulePayload);
-
-    
+    queryClient.invalidateQueries(["singleSchedules"]);
+    alert("스케쥴이 생성되었습니다.")
 
     // API 호출
     addSchedule(schedulePayload, {
@@ -142,7 +148,7 @@ export const PeriodicModal = () => {
         content: {
           backgroundColor: "#F6F8F1",
           width: "450px",  // 🔥 고정된 넓이
-          height: "600px", // 🔥 고정된 높이
+          height: "700px", // 🔥 고정된 높이
           margin: "auto",
           padding: "20px",
           borderRadius: "10px",
@@ -150,6 +156,18 @@ export const PeriodicModal = () => {
       }}
     >
       <h2 className="text-xl font-semibold mb-4">정기 일정 생성</h2>
+      <select
+  value={selectedPetId ?? ""}
+  onChange={(e) => setSelectedPetId(Number(e.target.value))}
+  className="border-b-2 border-gray-300 py-1 outline-none focus:border-green-500"
+>
+  <option value="">펫 선택</option>
+  {safePetData.map((pet) => (
+    <option key={pet.id} value={pet.id}>
+      {pet.name}
+    </option>
+  ))}
+</select>
 
       {/* 스케쥴 입력 */}
       <input
@@ -159,6 +177,7 @@ export const PeriodicModal = () => {
         placeholder="스케쥴 입력"
         className="w-full border-b-2 border-gray-300 py-1 mb-4 outline-none focus:border-green-500"
       />
+      
 
       {/* 날짜 선택 */}
       <div className="flex items-center gap-4 mb-4">

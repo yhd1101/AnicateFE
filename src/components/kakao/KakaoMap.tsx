@@ -37,9 +37,14 @@ const KakaoMap: React.FC<{ setUserLocation: (location: { lat: number; lng: numbe
   // const { data: search } = useFetchSearchHospital(gu, dong); // 구와 동 기반 검색 데이터 가져오기
   console.log(search);
 
+
+  
+
   // 지도 초기화
   useEffect(() => {
+    console.log("Kakao Maps API 확인:", window.kakao);
     if (window.kakao && window.kakao.maps) {
+      
       window.kakao.maps.load(() => {
         navigator.geolocation.getCurrentPosition(
           (position) => {

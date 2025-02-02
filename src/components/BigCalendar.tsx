@@ -8,12 +8,16 @@ import { PeriodicModal } from "./PeriodicModal";
 import { useUpdateSingleSchedule } from "@/services/useUpdateSingleSchedule";
 import { useDeleteSingleSchedule } from "@/services/useDeleteSingleSchedule";
 import ScheduleModal from "./ScheduleModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const BigCalendar: React.FC = () => {
   const { data, isLoading, error } = useSingleScheduleQuery();
+
+  console.log(data,"sdsd213");
   const userId = sessionStorage.getItem("id");
 
   const { data: petData, error: petError, isLoading: petIsLoading } = usePetQuery(Number(userId));
+  const queryClient = useQueryClient();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<Map<string, string[]>>(new Map());
@@ -69,6 +73,8 @@ export const BigCalendar: React.FC = () => {
       });
 
       console.log("스케줄 등록 성공:", response.data);
+      queryClient.invalidateQueries(["singleSchedules"]);
+
       alert("스케줄이 성공적으로 추가되었습니다!");
     } catch (error) {
       console.error("스케줄 등록 실패:", error);
@@ -99,6 +105,8 @@ export const BigCalendar: React.FC = () => {
       startDatetime,
       endDatetime,
     };
+
+    console.log(scheduleData,"아이시발");
 
     addSchedule(scheduleData);
   };
@@ -240,8 +248,8 @@ export const BigCalendar: React.FC = () => {
           updatedSchedules.set(selectedDate!, currentSchedules);
           return updatedSchedules;
         });
-
-        alert("스케줄이 성공적으로 삭제되었습니다.");
+        queryClient.invalidateQueries(["singleSchedules"]);
+  
       },
       onError: (error) => {
         console.error("스케줄 삭제 중 오류:", error);
@@ -397,7 +405,7 @@ export const BigCalendar: React.FC = () => {
         </div>
       </div>
 
-      <PeriodicModal />
+      <PeriodicModal petData={petData} />
 
       {selectedDate && (
         <ScheduleModal

@@ -152,10 +152,8 @@ const Mypage: React.FC = () => {
   // 스크롤 컨테이너 및 버튼 관리
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const todaySchedules = scheduleData?.filter((schedule: any) => {
-    const scheduleDate = schedule.startDatetime.split('T')[0];
-    return scheduleDate === todayFormatted;
-  }) || [];
+
+  
 
   // 스크롤 이동 함수
   const handleScrollLeft = () => {
@@ -171,11 +169,12 @@ const Mypage: React.FC = () => {
   };
 
   const scheduleDates = scheduleData
-  ?.map((schedule: any) => schedule.startDatetime.split('T')[0])
+  ?.map((schedule: any) => schedule.startDatetime?.split('T')[0] ?? "")
   .filter((date: string) => {
     const [year, month] = date.split('-');
     return parseInt(year) === currentYear && parseInt(month) === currentMonth;
   }) || [];
+
   return (
     <>
       <Header />
@@ -351,8 +350,7 @@ const Mypage: React.FC = () => {
         </div>
 
         <PetModal />
-        {/* <PetUpdateModal/> */}
-        
+ 
           <BigCalendar />
   
        

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { petModalState, petUpdateModalState } from '@/recoil/atoms/loginState';
 import PetImage from './PetImage';
 import PetInfo from './PetInfo';
 import { useDeletePet } from '@/services/useDeletePet';
+import { useQueryClient } from '@tanstack/react-query';
+import { PetUpdateModal } from './Pet/PetUpdateModal';
 
 interface ProfileSectionProps {
   width?: string;
@@ -45,14 +47,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   petId,
 }) => {
   const [isModalOpen, setIsModalOpen] = useRecoilState(petModalState);
-  const [isUpdateModalOpen, setUpdateIsModalOpen] = useRecoilState(petUpdateModalState);
+  // const [isUpdateModalOpen, setUpdateIsModalOpen] = useRecoilState(petUpdateModalState);
+
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedPetData, setSelectedPetData] = useState<any>(null);
+
+  const queryClient = useQueryClient();
 
   const deletePet = useDeletePet();
 
   const handleDeletePet = (petId: number) => {
     if (window.confirm("정말로 이 반려동물을 삭제하시겠습니까?")) {
       deletePet.mutate(petId); // 반려동물 삭제 실행
+      queryClient.invalidateQueries(["petDetails"]);
     }
+ 
   };
 
   // 클릭 시 모달 열기
@@ -61,10 +70,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       setIsModalOpen({ isModalOpen: true });
     }
   };
-
   const handleUpdateClick = () => {
-      setUpdateIsModalOpen({ isModalOpen: true });
-
+    setSelectedPetData({
+      id: petId,
+      name: petName,
+      age: petAge,
+      speciesName: petSpecies,
+      breedName: petBreed,
+      gender: petGender,
+      picture: petImageSrc,
+    });
+    setIsUpdateModalOpen(true);
   };
 
   return (
@@ -115,6 +131,15 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             
           </div>
         )}
+
+{selectedPetData && (
+        <PetUpdateModal
+          petData={selectedPetData}
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+        />
+      )}
+                
       </div>
     </div>
   );

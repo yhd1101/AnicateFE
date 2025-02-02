@@ -8,6 +8,7 @@ const fetchNearbyHospitals = async (latitude: number, longitude: number) => {
   const response = await axios.get(API_URL, {
     params: { latitude, longitude },
   });
+  console.log("dsadas", response.data);
   return response.data; // API 응답 데이터 반환
 };
 

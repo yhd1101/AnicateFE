@@ -40,6 +40,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setSelectedPetName,
 }) => {
 
+
+  console.log("d231", petData);
+
   useEffect(() => {
     console.log("Current Editing Schedule:", editingSchedule);
   }, [editingSchedule]);

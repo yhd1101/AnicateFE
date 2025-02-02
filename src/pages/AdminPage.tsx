@@ -14,12 +14,17 @@ import { useDeletePet } from "@/services/useDeletePet";
 import { PetUpdateModal } from "@/components/Pet/PetUpdateModal";
 import Calendar from "@/components/Calendar";
 import { useAdminQuery } from "@/services/useAdmin";
+import { useNavigate } from "react-router-dom";
 
 const AdminPage: React.FC = () => {
+  const navigate =useNavigate();
     const queryClient = useQueryClient(); // queryClient 가져오기
   const userId = sessionStorage.getItem("id"); // userId는 sessionStorage에 저장되어 있어야 함
-  const { data: userData, error: userError, isLoading: userIsLoading } = useAdminQuery(Number(userId));
+  const { data: userData  } = useAdminQuery(Number(userId));
   console.log(userData,"sadasd");
+// 3. Optional Chaining 적용
+console.log("사용자 데이터:", userData?.data);
+console.log("이름:", userData?.data?.name ?? "이름 없음");
 
   console.log("sd", userData?.data.name);
   const token = sessionStorage.getItem("token"); // 토큰 가져오기
@@ -115,6 +120,13 @@ const AdminPage: React.FC = () => {
   // 반려동물 데이터 요청
   const { data: petData, error: petError, isLoading: petIsLoading } = usePetQuery(Number(userId));
   console.log("233311",petData);
+
+  const handleChat = () => {
+    navigate("/admin/chatlist")
+  };
+  const handleInformation = () => {
+    navigate("/information/new")
+  };
 
 
 
@@ -254,12 +266,16 @@ const AdminPage: React.FC = () => {
             <img
                 src="Vector.png"
                 alt="Vector Icon"
+                onClick={handleChat}
+                className="cursor-pointer" // ✅ 클릭 가능하게 변경
                 // className="w-12 h-12 mr-4" // 크기와 간격 설정
             />
             {/* file-plus.png 이미지 */}
             <img
                 src="/file-plus.png"
                 alt="File Plus Icon"
+                onClick={handleInformation}
+                className="cursor-pointer" // ✅ 클릭 가능하게 변경
                 // className="w-12 h-12" // 크기 설정
             />
             </div>

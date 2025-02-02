@@ -1,65 +1,82 @@
-import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Modal from "react-modal";
+import { useUpdatePetMutation } from "@/services/useUpdatePetMutation";
+import { useGetPetDetails } from "@/pages/useGetPetDetails";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PetData {
-    id: number;
-    name: string;
-    age: string;
-    speciesId: string;
-    speciesName: string;
-    breedId: string;
-    breedName: string;
-    gender: string;
-    picture: string;
-  }
-  
-
+  id: number | null; // id가 null일 가능성 대비
+  name: string;
+  age: string;
+  picture: string;
+  speciesId: number;
+  breedId: number;
+  gender: string;
+}
 
 interface PetUpdateModalProps {
-    petData: PetData; // petData 타입 지정
-    isOpen: boolean;
-    onClose: () => void;
-  }
-  
+  petData: PetData;
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 export const PetUpdateModal: React.FC<PetUpdateModalProps> = ({ petData, isOpen, onClose }) => {
-  const [image, setImage] = useState<string | null>(petData?.picture || '/image 8.png');
-  const [selectedSpecies, setSelectedSpecies] = useState<string>(petData?.speciesId || '');
-  const [selectedBreed, setSelectedBreed] = useState<string>(petData?.breedId || '');
-  const [selectedGender, setSelectedGender] = useState<string>(petData?.gender || '');
-  const [selectedName, setSelectedName] = useState<string>(petData?.name || '');
-  const [selectedAge, setSelectedAge] = useState<string>(petData?.age || '');
-  const [speciesList, setSpeciesList] = useState<any[]>([]);
-  const [breedList, setBreedList] = useState<any[]>([]);
+  const queryClient = useQueryClient();
+  const userId = Number(sessionStorage.getItem("id"));
+  const { mutate: updatePet } = useUpdatePetMutation(userId);
+  const { data: petDatas } = useGetPetDetails(petData?.id ?? 0);
 
-  // 종 목록 가져오기
-  useEffect(() => {
-    axios.get("http://localhost:8080/api/species")
-      .then((response) => {
-        setSpeciesList(response.data.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching species data:", error);
-      });
-  }, []);
+  // 기존 데이터 기본값으로 설정
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>(petData?.picture || "/image 8.png");
+  const [selectedName, setSelectedName] = useState<string>(petData?.name || "");
+  const [selectedAge, setSelectedAge] = useState<string>(petData?.age || "");
+  const [speciesId] = useState<number>((petDatas?.data.speciesId));
+const [breedId] = useState<number>(petDatas?.data.breedId);
 
-  // 품종 목록 가져오기
-  useEffect(() => {
-    if (selectedSpecies) {
-      axios.get(`http://localhost:8080/api/breeds/${selectedSpecies}`)
-        .then((response) => {
-          setBreedList(response.data.data);
-        })
-        .catch((error) => {
-          console.error("Error fetching breed data:", error);
-        });
+  const [gender] = useState<string>(petData?.gender || ""); // 기존 값 유지
+
+  console.log(speciesId,"dsad"),
+  console.log(breedId, "dsdbrd");
+
+  // 이미지 변경 핸들러
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
-  }, [selectedSpecies]);
-
-  const handleSubmit = async () => {
-    // 수정 요청 로직 작성
   };
+
+  // 클릭 시 파일 선택창 열기
+  const handleImageClick = () => {
+    document.getElementById("fileInput")?.click();
+  };
+  const handleSubmit = () => {
+    if (!petData.id) {
+      alert("잘못된 요청입니다. 다시 시도해 주세요.");
+      return;
+    }
+  
+    // 기존 데이터 유지 + 변경된 값만 추가
+    const updatedData: any = {
+      petId: petData.id,
+      speciesId: petDatas?.data.speciesId ?? petData.speciesId, // 기존 데이터 유지
+      breedId: petDatas?.data.breedId ?? petData.breedId, // 기존 데이터 유지
+      gender: petDatas?.data.gender ?? petData.gender, // 기존 데이터 유지
+      name: selectedName, // 변경 가능
+      age: selectedAge, // 변경 가능
+    };
+  
+    // ✅ 변경된 값만 추가
+    if (image) updatedData.file = image; // 이미지 변경 시 추가
+  
+    console.log("보낼 데이터 확인:", updatedData);
+    queryClient.invalidateQueries(["petDetails"]);
+    updatePet(updatedData);
+  };
+  
+  
 
   return (
     <Modal
@@ -67,61 +84,70 @@ export const PetUpdateModal: React.FC<PetUpdateModalProps> = ({ petData, isOpen,
       isOpen={isOpen}
       onRequestClose={onClose}
       style={{
-        overlay: { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+        overlay: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
         content: {
-          backgroundColor: '#F6F8F1',
-          width: '40%',
-          height: '97%',
-          margin: 'auto',
-          padding: '20px',
-          borderRadius: '10px',
+          backgroundColor: "#F6F8F1",
+          width: "400px",
+          height: "700px",
+          margin: "auto",
+          padding: "20px",
+          borderRadius: "10px",
         },
       }}
     >
       <div className="flex flex-col items-center">
-        <input
-          type="text"
-          value={selectedName}
-          onChange={(e) => setSelectedName(e.target.value)}
-          placeholder="반려동물 이름"
-        />
-        <input
-          type="text"
-          value={selectedAge}
-          onChange={(e) => setSelectedAge(e.target.value)}
-          placeholder="반려동물 나이"
-        />
-        {/* 종 드롭다운 */}
-        <select
-          value={selectedSpecies}
-          onChange={(e) => setSelectedSpecies(e.target.value)}
+        {/* 이미지 선택 */}
+        <div
+          className="bg-white mx-auto flex justify-center items-center mb-6"
+          style={{
+            width: "150px",
+            height: "150px",
+            borderRadius: "50%",
+            overflow: "hidden",
+          }}
+          onClick={handleImageClick}
         >
-          <option value="">종 선택</option>
-          {speciesList.map((species) => (
-            <option key={species.id} value={species.id}>{species.name}</option>
-          ))}
-        </select>
-        {/* 품종 드롭다운 */}
-        {selectedSpecies && (
-          <select
-            value={selectedBreed}
-            onChange={(e) => setSelectedBreed(e.target.value)}
+          <img
+            src={imagePreview}
+            alt="Pet"
+            className="object-cover"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+
+        <input
+          type="file"
+          id="fileInput"
+          onChange={handleImageChange}
+          accept="image/*"
+          className="hidden"
+        />
+
+        {/* 반려동물 정보 입력 */}
+        <div className="w-full flex flex-col">
+          <label className="block text-[#5CA157] font-semibold mb-2">반려동물 이름</label>
+          <input
+            type="text"
+            value={selectedName}
+            onChange={(e) => setSelectedName(e.target.value)}
+            className="w-[90%] p-2 mb-4 border rounded-md"
+          />
+
+          <label className="block text-[#5CA157] font-semibold mb-2">나이</label>
+          <input
+            type="text"
+            value={selectedAge}
+            onChange={(e) => setSelectedAge(e.target.value)}
+            className="w-[90%] p-2 mb-4 border rounded-md"
+          />
+
+          <button
+            onClick={handleSubmit}
+            className="bg-[#5CA157] text-white font-semibold py-2 px-6 rounded-md mt-4 hover:bg-[#4A8B42]"
           >
-            <option value="">품종 선택</option>
-            {breedList.map((breed) => (
-              <option key={breed.id} value={breed.id}>{breed.name}</option>
-            ))}
-          </select>
-        )}
-        <select
-          value={selectedGender}
-          onChange={(e) => setSelectedGender(e.target.value)}
-        >
-          <option value="">성별 선택</option>
-          <option value="수컷">수컷</option>
-          <option value="암컷">암컷</option>
-        </select>
-        <button onClick={handleSubmit}>수정하기</button>
+            수정하기
+          </button>
+        </div>
       </div>
     </Modal>
   );

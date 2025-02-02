@@ -4,8 +4,15 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import axios from "axios";
 import Header from "@/components/Header";
+import { useExitChatRoomMutation } from "@/services/useExitChat";
+import { useExitChatRoomAsAdminMutation } from "@/services/useExitChatRoomAsAdminMutation";
+
 
 const ChatRoom: React.FC = () => {
+
+  const { mutate: exitChatRoomAsAdmin } = useExitChatRoomAsAdminMutation();
+
+  const { mutate: exitChatRoom } = useExitChatRoomMutation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const userId = sessionStorage.getItem("id")
@@ -16,6 +23,20 @@ const ChatRoom: React.FC = () => {
     { senderName: string; content: string; timestamp: string; sender: number }[]
   >([]);
 
+  const handleAdminExit= (roomId: string) => {
+    const isConfirmed = window.confirm("채팅방을 정말 나가시겠습니까?");
+    if (!isConfirmed) return; // 사용자가 취소하면 종료
+    navigate("/admin/chatlist")
+    exitChatRoomAsAdmin(roomId);
+
+  }
+
+  const handleExit = (roomId: string) => {
+    const isConfirmed = window.confirm("채팅방을 정말 나가시겠습니까?");
+    if (!isConfirmed) return; // 사용자가 취소하면 종료
+    navigate("/chatlist")
+    exitChatRoom(roomId);
+  };
   console.log("mses", messages);
   const [newMessage, setNewMessage] = useState("");
   const [isAtBottom, setIsAtBottom] = useState(true); // 스크롤 상태 관리
@@ -45,6 +66,7 @@ const ChatRoom: React.FC = () => {
       });
     }
   };
+  
 
   useEffect(() => {
     scrollToBottom(); // 메시지가 추가될 때만 맨 아래로 스크롤
@@ -67,6 +89,12 @@ const ChatRoom: React.FC = () => {
     client.onConnect = () => {
       client.subscribe(`/topic/chat/${roomId}`, (message) => {
         const receivedMessage = JSON.parse(message.body);
+
+        // const role = sessionStorage.getItem("role");
+        // if (role === "ADMIN") {
+        //   window.alert(`새로운 메시지 도착: ${receivedMessage.content}`);
+        // }
+    
         fetchChatLogs(token);
         setMessages((prev) => [
           ...prev,
@@ -145,22 +173,46 @@ const ChatRoom: React.FC = () => {
       <Header />
       <div className="flex justify-between items-center px-4 py-2 bg-white">
   {/* 🔙 뒤로가기 버튼 */}
-  <button
-    onClick={() => navigate("/chatlist")}
-    className="text-white text-2xl font-bold bg-[#D8E6BE] px-3 py-1 rounded-md"
-  >
-    ←
-  </button>
+  {/* 🔙 뒤로가기 버튼 */}
+<button
+  onClick={() => {
+    const role = sessionStorage.getItem("role"); // 세션에서 role 가져오기
+    if (role === "ADMIN") {
+      navigate("/admin/chatlist");
+    } else {
+      navigate("/chatlist");
+    }
+  }}
+  className="text-white text-2xl font-bold bg-[#D8E6BE] px-3 py-1 rounded-md"
+>
+  ←
+</button>
+
 
   {/* 채팅방 제목 */}
   <h1 className="text-2xl font-bold text-[#5CA157]">채팅하기 {roomId}</h1>
 
   {/* 🚪 나가기 버튼 */}
   <button
-    className="bg-[#D8E6BE] px-4 py-2 rounded-md font-bold text-white"
-  >
-    나가기
-  </button>
+  className="bg-[#D8E6BE] px-4 py-2 rounded-md font-bold text-white"
+  onClick={() => {
+    if (!roomId) {
+      alert("채팅방 ID가 존재하지 않습니다.");
+      return;
+    }
+
+    const role = sessionStorage.getItem("role"); // ✅ 역할 가져오기
+
+    if (role === "ADMIN") {
+      handleAdminExit(roomId); // ✅ Admin의 경우 관리자 퇴장 실행
+    } else {
+      handleExit(roomId); // ✅ 일반 사용자의 경우 일반 퇴장 실행
+    }
+  }}
+>
+  나가기
+</button>
+
 </div>
 
       <div
