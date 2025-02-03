@@ -22,6 +22,9 @@ export default defineConfig({
         ws: true, // WebSocket 프록시 활성화
       },
     },
+    strictPort: true,
+    cors: true,
+    allowedHosts: ['anicare.run', 'front.anicare.run'],
   },
   base: process.env.NODE_ENV === 'development' ? '/' : './',
   build: {
