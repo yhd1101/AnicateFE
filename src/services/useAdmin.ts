@@ -34,7 +34,7 @@ const fetchUserData = async (): Promise<UserDetailResponseDTO> => {
   console.log("Token without quotes:", token);
 
   // axios를 이용해 요청 보내기
-  const response = await axios.get('http://localhost:8080/api/admin', {
+  const response = await axios.get('http://43.202.151.74:8080api/admin', {
     headers: {
       Authorization: `Bearer ${token}`, // 토큰을 Authorization 헤더에 포함
     },

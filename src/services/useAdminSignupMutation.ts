@@ -17,7 +17,7 @@ const signupAdmin = async (
   adminData: CreateAdminDTO
 ): Promise<AdminResponseDTO> => {
   const response = await axios.post<AdminResponseDTO>(
-    `http://localhost:8080/api/admin`,
+    `=http://43.202.151.74:8080/api/admin`,
     adminData, // 관리자 생성 데이터 전송
     {
       headers: {

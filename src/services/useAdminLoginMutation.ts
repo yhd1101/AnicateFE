@@ -17,7 +17,7 @@ interface LoginResponseDTO {
 // 로그인 API 호출 함수
 const loginAdmin = async (loginData: LoginAdminDTO): Promise<LoginResponseDTO> => {
   const response = await axios.post<LoginResponseDTO>(
-    "http://localhost:8080/api/auth/login", // API URL
+    "http://43.202.151.74:8080/api/auth/login", // API URL
     loginData, // 로그인 데이터 전송
     {
       headers: {
