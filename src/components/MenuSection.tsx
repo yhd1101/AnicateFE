@@ -5,6 +5,16 @@ import { useNavigate } from 'react-router-dom';
 const MenuSection: React.FC = () => {
   const navigate = useNavigate();
 
+  const checkAuthAndNavigate = (path: string) => {
+    const token = sessionStorage.getItem('token'); // sessionStorage에서 토큰 확인
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      navigate('/'); // 로그인 페이지로 이동
+      return;
+    }
+    navigate(path); // 로그인된 경우 해당 경로로 이동
+  };
+
   return (
     <div className="bg-[#D8E6BE] flex justify-center w-[1024px] max-w-full h-full mx-auto my-10 rounded-lg px-4">
       <div className="w-full flex flex-wrap md:flex-nowrap justify-center items-center gap-4 md:gap-10 py-6">
@@ -18,8 +28,8 @@ const MenuSection: React.FC = () => {
         <MenuButton
           image="/doctor.png"
           alt="Doctor Icon"
-          title="병원찾기"
-          onClick={() => navigate('/hospital')}
+          title="관리자와채팅"
+          onClick={() => checkAuthAndNavigate('/chatlist')} // 인증 체크 후 이동
         />
         <MenuButton
           image="/community.png"

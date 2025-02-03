@@ -19,6 +19,8 @@ const ChatRoom: React.FC = () => {
     ? parseInt(sessionStorage.getItem("id")!, 10)
     : null;
 
+    console.log("userID", userId);
+
   const [messages, setMessages] = useState<
     { senderName: string; content: string; timestamp: string; sender: number }[]
   >([]);
@@ -190,7 +192,7 @@ const ChatRoom: React.FC = () => {
 
 
   {/* 채팅방 제목 */}
-  <h1 className="text-2xl font-bold text-[#5CA157]">채팅하기 {roomId}</h1>
+  <h1 className="text-2xl font-bold text-[#5CA157]">채팅하기</h1>
 
   {/* 🚪 나가기 버튼 */}
   <button
@@ -222,6 +224,7 @@ const ChatRoom: React.FC = () => {
 >
   {messages.map((message, index) => {
     const isMyMessage = message.sender === userId;
+    console.log(isMyMessage)
 
     // ✅ SYSTEM 메시지일 경우 (중앙 정렬, 말풍선 X)
     if (message.senderName === "SYSTEM") {
