@@ -41,7 +41,7 @@ export const useAdminChatQuery = (page: number, size: number) => {
 
       const sanitizedToken = token.replace(/"/g, ""); // 토큰 정리
       const response = await axios.get<PageDTO<ChatRoomResponseDTO>>(
-        "http://localhost:8080/api/admin/chat/rooms",
+        "http://localhost:8080/api/admin/chat",
         {
           headers: {
             Authorization: `Bearer ${sanitizedToken}`,

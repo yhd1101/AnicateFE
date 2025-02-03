@@ -1,18 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useUserQuery } from "@/services/useUserQuery"; // React Query 훅 가져오기
-import ProfileSection from "@/components/ProfileSection";
+
 import { usePetQuery } from "@/services/usePetQuery"; // 반려동물 데이터 훅
-import { PetModal } from "./PetModal";
-import BigCalendar from "@/components/BigCalendar";
+
 import Header from "@/components/Header";
-import { useUpdateUser } from "@/services/useUpdateUser";
+
 import axios from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLogout } from "@/services/useLogout";
 import { useDeleteUser } from "@/services/useDeleteUser";
-import { useDeletePet } from "@/services/useDeletePet";
-import { PetUpdateModal } from "@/components/Pet/PetUpdateModal";
-import Calendar from "@/components/Calendar";
 import { useAdminQuery } from "@/services/useAdmin";
 import { useNavigate } from "react-router-dom";
 
