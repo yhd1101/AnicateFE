@@ -12,12 +12,13 @@ import Hospital from './pages/Hospital.tsx';
 import CommunityUpdate from './pages/CommunityUpdate.tsx';
 import ChatList from './pages/ChatList.tsx';
 import ChatRoom from './pages/ChatRoom.tsx';
-import AdminSignup from './pages/adminSignup.tsx';
+
 import AdminLogin from './pages/AdminLogin.tsx';
 import AdminPage from './pages/AdminPage.tsx';
 import AdminChatList from './pages/AdminChatList.tsx';
 import ChatRoomPost from './pages/ChatRoomPost.tsx';
 import InformationPost from './pages/InformationPost.tsx';
+import AdminSignup from './pages/AdminSignup.tsx';
 
 type routeElement = {
   path: string;
